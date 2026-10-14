@@ -143,7 +143,7 @@ RViz2 的 Fixed Frame 可设为 `base_link`，显示 `/scissors/colored_cloud`�
 
 ## 当前参数
 
-- 模型：`yolo26l.pt`
+- 模型：`yolo26x.pt`（由 Git LFS 管理）
 - 检测阈值：`0.60`
 - 目标类别：`scissors`
 - 外参：历史记录中的 11-pose joint 优化结果
