@@ -7,7 +7,7 @@ import sys
 import time
 
 from action_msgs.msg import GoalStatus
-from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import PoseStamped, Twist
 from nav2_msgs.action import ComputePathToPose, NavigateToPose
 import rclpy
 from rclpy.action import ActionClient
@@ -20,10 +20,11 @@ from tf2_ros import Buffer, TransformException, TransformListener
 class ShortGoalTest(Node):
     """Plan first, then drive a short distance with bounded run time."""
 
-    def __init__(self, distance, timeout):
+    def __init__(self, distance, timeout, dry_run_seconds=0.0):
         super().__init__("go2_nav2_short_goal_test")
         self.distance = float(distance)
         self.timeout = float(timeout)
+        self.dry_run_seconds = float(dry_run_seconds)
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.path_client = ActionClient(
@@ -48,6 +49,18 @@ class ShortGoalTest(Node):
         self.navigation_finished = False
         self.motion_enabled = False
         self.last_feedback_time = 0.0
+        self.command_samples = []
+        self.create_subscription(Twist, "/cmd_vel", self.command_callback, 50)
+
+    def command_callback(self, message):
+        """Record the final velocity stream received by the motion adapter."""
+        self.command_samples.append((
+            float(message.linear.x),
+            float(message.linear.y),
+            float(message.angular.z),
+        ))
+        if len(self.command_samples) > 2000:
+            del self.command_samples[:1000]
 
     def wait_future(self, future, timeout, description):
         """Spin until a future completes or raise a descriptive timeout."""
@@ -170,8 +183,8 @@ class ShortGoalTest(Node):
         remaining = message.feedback.distance_remaining
         print(f"Distance remaining: {remaining:.3f} m")
 
-    def navigate(self, target):
-        """Run the short navigation goal with a hard timeout."""
+    def send_navigation_goal(self, target):
+        """Send the short navigation goal and retain its handle."""
         goal = NavigateToPose.Goal()
         goal.pose = target
         self.navigation_handle = self.wait_future(
@@ -187,8 +200,13 @@ class ShortGoalTest(Node):
             or not self.navigation_handle.accepted
         ):
             raise RuntimeError("Nav2 rejected the navigation goal")
+        return self.navigation_handle.get_result_async()
+
+    def navigate(self, target):
+        """Run the short navigation goal with a hard timeout."""
+        result_future = self.send_navigation_goal(target)
         wrapped = self.wait_future(
-            self.navigation_handle.get_result_async(),
+            result_future,
             self.timeout,
             "navigation",
         )
@@ -198,6 +216,60 @@ class ShortGoalTest(Node):
                 f"navigation failed with status {wrapped.status}"
             )
         print("Nav2 short goal succeeded")
+
+    def print_command_summary(self):
+        """Print final velocity ranges observed during a dry run."""
+        nonzero = [
+            sample for sample in self.command_samples
+            if any(abs(value) > 1e-4 for value in sample)
+        ]
+        print(
+            f"Command samples: total={len(self.command_samples)}, "
+            f"nonzero={len(nonzero)}"
+        )
+        if not nonzero:
+            raise RuntimeError("Nav2 produced no nonzero /cmd_vel samples")
+        labels = ("linear.x", "linear.y", "angular.z")
+        for index, label in enumerate(labels):
+            values = [sample[index] for sample in nonzero]
+            print(
+                f"{label}: min={min(values):.4f}, "
+                f"max={max(values):.4f}, "
+                f"mean={sum(values) / len(values):.4f}"
+            )
+        unique_samples = []
+        for sample in nonzero:
+            rounded = tuple(round(value, 3) for value in sample)
+            if rounded not in unique_samples:
+                unique_samples.append(rounded)
+            if len(unique_samples) >= 12:
+                break
+        print(f"First distinct commands: {unique_samples}")
+
+    def dry_run(self, target):
+        """Collect Nav2 output while the motion adapter remains disabled."""
+        self.set_motion(False)
+        self.command_samples.clear()
+        result_future = self.send_navigation_goal(target)
+        deadline = time.monotonic() + self.dry_run_seconds
+        while (
+            rclpy.ok()
+            and time.monotonic() < deadline
+            and not result_future.done()
+        ):
+            rclpy.spin_once(self, timeout_sec=0.10)
+        if result_future.done():
+            wrapped = result_future.result()
+            print(f"Dry-run navigation ended with status {wrapped.status}")
+        else:
+            self.wait_future(
+                self.navigation_handle.cancel_goal_async(),
+                3.0,
+                "dry-run goal cancellation",
+            )
+            print("Dry-run goal cancelled as planned")
+        self.navigation_finished = True
+        self.print_command_summary()
 
     def emergency_stop(self):
         """Cancel an active goal and request the latched motion stop."""
@@ -239,6 +311,9 @@ class ShortGoalTest(Node):
         self.wait_for_interfaces()
         target = self.make_goal()
         self.plan(target)
+        if self.dry_run_seconds > 0.0:
+            self.dry_run(target)
+            return
         self.set_motion(True)
         self.navigate(target)
         self.set_motion(False)
@@ -249,11 +324,14 @@ def parse_args(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument("--distance", type=float, default=0.25)
     parser.add_argument("--timeout", type=float, default=25.0)
+    parser.add_argument("--dry-run-seconds", type=float, default=0.0)
     arguments = parser.parse_args(argv)
     if not 0.10 <= arguments.distance <= 0.30:
         parser.error("distance must be between 0.10 and 0.30 metres")
     if not 5.0 <= arguments.timeout <= 30.0:
         parser.error("timeout must be between 5 and 30 seconds")
+    if not 0.0 <= arguments.dry_run_seconds <= 10.0:
+        parser.error("dry-run-seconds must be between 0 and 10 seconds")
     return arguments
 
 
@@ -261,7 +339,11 @@ def main(argv=None):
     """Run the short-goal test and always leave motion disabled."""
     arguments = parse_args(argv)
     rclpy.init()
-    node = ShortGoalTest(arguments.distance, arguments.timeout)
+    node = ShortGoalTest(
+        arguments.distance,
+        arguments.timeout,
+        arguments.dry_run_seconds,
+    )
     exit_code = 0
     try:
         node.run()
