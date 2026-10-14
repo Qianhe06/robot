@@ -1,0 +1,789 @@
+
+========== 1. 系统 ==========
+Tue Oct 13 04:32:20 PM CST 2026
+Linux user-W40P 5.15.0-100-generic #110-Ubuntu SMP Wed Feb 7 13:27:48 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+Distributor ID:	Ubuntu
+Description:	Ubuntu 22.04.5 LTS
+Release:	22.04
+Codename:	jammy
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eno1             UP             192.168.123.99/24 fe80::ea61:1fff:fe61:d9dd/64 
+eno2             UP             172.16.1.67/24 fe80::ea61:1fff:fe61:d9de/64 
+docker0          UP             172.17.0.1/16 fe80::64de:e0ff:febc:1cda/64 
+br-bc76f7e654f4  UP             172.20.0.1/16 fe80::c4:e3ff:fea7:64e8/64 
+br-0129474a6cd4  UP             172.19.0.1/16 fe80::5c63:b3ff:fe20:6a1c/64 
+br-257f782ba5c9  UP             172.21.0.1/16 fe80::ccc1:fff:fedc:8a83/64 
+br-48aca0571db9  DOWN           172.18.0.1/16 
+veth22bc6c9@if2  UP             fe80::3c70:6dff:feef:c554/64 
+veth9b99ba9@if2  UP             fe80::75:87ff:fed7:1af6/64 
+veth9a5d9c6@if2  UP             fe80::3010:99ff:fe16:69b7/64 
+veth8fde8fd@if2  UP             fe80::6092:c9ff:fe24:2ce2/64 
+veth83dc401@if2  UP             fe80::d881:a1ff:fe11:86ae/64 
+veth9216176@if2  UP             fe80::c83:63ff:feba:913b/64 
+vethe7e4474@if2  UP             fe80::84e8:13ff:fea7:9987/64 
+vethb37e56a@if2  UP             fe80::c08f:cdff:fedd:5a08/64 
+veth805eeb3@if2  UP             fe80::1419:c1ff:feae:1677/64 
+veth1868723@if3  UP             fe80::ac0e:acff:fee9:b6f0/64 
+veth4e6a82a@if3  UP             fe80::b88c:2cff:feee:e481/64 
+veth3227db3@if2  UP             fe80::b04b:30ff:fe08:1e59/64 
+default via 172.16.1.254 dev eno2 proto static 
+172.16.1.0/24 dev eno2 proto kernel scope link src 172.16.1.67 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 
+172.18.0.0/16 dev br-48aca0571db9 proto kernel scope link src 172.18.0.1 linkdown 
+172.19.0.0/16 dev br-0129474a6cd4 proto kernel scope link src 172.19.0.1 
+172.20.0.0/16 dev br-bc76f7e654f4 proto kernel scope link src 172.20.0.1 
+172.21.0.0/16 dev br-257f782ba5c9 proto kernel scope link src 172.21.0.1 
+192.168.123.0/24 dev eno1 proto kernel scope link src 192.168.123.99 
+
+========== 2. Conda 和 Python ==========
+/home/user/miniconda3/envs/robot/bin/python
+Python 3.10.22
+
+# conda environments:
+#
+                       /home/user/anaconda3/envs/aigcdetect
+                       /home/user/anaconda3/envs/dassl
+                       /home/user/anaconda3/envs/picsearch
+                       /home/user/anaconda3/envs/qwen2_vl
+                       /home/user/anaconda3/envs/sft
+                       /home/user/anaconda3/envs/sft_qwen2
+                       /home/user/anaconda3/envs/unit2i
+                       /home/user/anaconda3/envs/vlmdetect
+base                   /home/user/miniconda3
+2048                   /home/user/miniconda3/envs/2048
+autogen                /home/user/miniconda3/envs/autogen
+crawl4ai               /home/user/miniconda3/envs/crawl4ai
+douyin                 /home/user/miniconda3/envs/douyin
+evoagentx              /home/user/miniconda3/envs/evoagentx
+facelib                /home/user/miniconda3/envs/facelib
+joyageny               /home/user/miniconda3/envs/joyageny
+mediacrawler           /home/user/miniconda3/envs/mediacrawler
+metagpt                /home/user/miniconda3/envs/metagpt
+myagent                /home/user/miniconda3/envs/myagent
+openvla                /home/user/miniconda3/envs/openvla
+oxy_env                /home/user/miniconda3/envs/oxy_env
+roboguard              /home/user/miniconda3/envs/roboguard
+robot                * /home/user/miniconda3/envs/robot
+twitter                /home/user/miniconda3/envs/twitter
+wb_follow              /home/user/miniconda3/envs/wb_follow
+wb_user                /home/user/miniconda3/envs/wb_user
+xhs                    /home/user/miniconda3/envs/xhs
+xhs_spider             /home/user/miniconda3/envs/xhs_spider
+
+
+========== 3. Python 依赖 ==========
+[正常] numpy: 1.26.4
+[正常] cv2: 4.11.0
+[正常] torch: 2.6.0+cu124
+[正常] ultralytics: 8.4.176
+[正常] open3d: 0.20.0
+[正常] rclpy: 无版本信息
+[正常] cv_bridge: 无版本信息
+CUDA available: True
+GPU count: 2
+GPU 0: NVIDIA GeForce RTX 4090
+GPU 1: NVIDIA GeForce RTX 4090
+
+========== 4. ROS2 环境 ==========
+ROS_DISTRO=humble
+RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+/opt/ros/humble/bin/ros2
+
+   NETWORK CONFIGURATION
+inet         : 127.0.0.1
+inet4        : ['127.0.0.1']
+inet6        : ['::1']
+netmask      : 255.0.0.0
+device       : lo
+flags        : 73<RUNNING,UP,LOOPBACK>
+mtu          : 65536
+inet         : 192.168.123.99
+inet4        : ['192.168.123.99']
+ether        : e8:61:1f:61:d9:dd
+inet6        : ['fe80::ea61:1fff:fe61:d9dd%eno1']
+netmask      : 255.255.255.0
+device       : eno1
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 192.168.123.255
+inet         : 172.16.1.67
+inet4        : ['172.16.1.67']
+ether        : e8:61:1f:61:d9:de
+inet6        : ['fe80::ea61:1fff:fe61:d9de%eno2']
+netmask      : 255.255.255.0
+device       : eno2
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 172.16.1.255
+inet         : 172.17.0.1
+inet4        : ['172.17.0.1']
+ether        : 66:de:e0:bc:1c:da
+inet6        : ['fe80::64de:e0ff:febc:1cda%docker0']
+netmask      : 255.255.0.0
+device       : docker0
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 172.17.255.255
+inet         : 172.20.0.1
+inet4        : ['172.20.0.1']
+ether        : 02:c4:e3:a7:64:e8
+inet6        : ['fe80::c4:e3ff:fea7:64e8%br-bc76f7e654f4']
+netmask      : 255.255.0.0
+device       : br-bc76f7e654f4
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 172.20.255.255
+inet         : 172.19.0.1
+inet4        : ['172.19.0.1']
+ether        : 5e:63:b3:20:6a:1c
+inet6        : ['fe80::5c63:b3ff:fe20:6a1c%br-0129474a6cd4']
+netmask      : 255.255.0.0
+device       : br-0129474a6cd4
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 172.19.255.255
+inet         : 172.21.0.1
+inet4        : ['172.21.0.1']
+ether        : ce:c1:0f:dc:8a:83
+inet6        : ['fe80::ccc1:fff:fedc:8a83%br-257f782ba5c9']
+netmask      : 255.255.0.0
+device       : br-257f782ba5c9
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 172.21.255.255
+inet         : 172.18.0.1
+inet4        : ['172.18.0.1']
+ether        : ee:17:e3:a7:86:06
+netmask      : 255.255.0.0
+device       : br-48aca0571db9
+flags        : 4099<BROADCAST,UP,MULTICAST>
+mtu          : 1500
+broadcast    : 172.18.255.255
+ether        : 3e:70:6d:ef:c5:54
+inet6        : ['fe80::3c70:6dff:feef:c554%veth22bc6c9']
+device       : veth22bc6c9
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : 02:75:87:d7:1a:f6
+inet6        : ['fe80::75:87ff:fed7:1af6%veth9b99ba9']
+device       : veth9b99ba9
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : 32:10:99:16:69:b7
+inet6        : ['fe80::3010:99ff:fe16:69b7%veth9a5d9c6']
+device       : veth9a5d9c6
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : 62:92:c9:24:2c:e2
+inet6        : ['fe80::6092:c9ff:fe24:2ce2%veth8fde8fd']
+device       : veth8fde8fd
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : da:81:a1:11:86:ae
+inet6        : ['fe80::d881:a1ff:fe11:86ae%veth83dc401']
+device       : veth83dc401
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : 0e:83:63:ba:91:3b
+inet6        : ['fe80::c83:63ff:feba:913b%veth9216176']
+device       : veth9216176
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : 86:e8:13:a7:99:87
+inet6        : ['fe80::84e8:13ff:fea7:9987%vethe7e4474']
+device       : vethe7e4474
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : c2:8f:cd:dd:5a:08
+inet6        : ['fe80::c08f:cdff:fedd:5a08%vethb37e56a']
+device       : vethb37e56a
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : 16:19:c1:ae:16:77
+inet6        : ['fe80::1419:c1ff:feae:1677%veth805eeb3']
+device       : veth805eeb3
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : ae:0e:ac:e9:b6:f0
+inet6        : ['fe80::ac0e:acff:fee9:b6f0%veth1868723']
+device       : veth1868723
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : ba:8c:2c:ee:e4:81
+inet6        : ['fe80::b88c:2cff:feee:e481%veth4e6a82a']
+device       : veth4e6a82a
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+ether        : b2:4b:30:08:1e:59
+inet6        : ['fe80::b04b:30ff:fe08:1e59%veth3227db3']
+device       : veth3227db3
+flags        : 4163<BROADCAST,RUNNING,UP,MULTICAST>
+mtu          : 1500
+
+   PACKAGE VERSIONS
+action_msgs                               : latest=1.2.3, local=1.2.3
+nav_msgs                                  : latest=4.9.2, local=4.9.2
+tlsf_cpp                                  : latest=0.13.0, local=0.13.0
+rosidl_runtime_c                          : latest=3.1.9, local=3.1.9
+rmw_cyclonedds_cpp                        : latest=1.3.5, local=1.3.5
+rosbag2                                   : latest=0.15.17, local=0.15.17
+launch_yaml                               : latest=1.0.15, local=1.0.15
+rmw_fastrtps_cpp                          : latest=6.2.10, local=6.2.10
+interactive_markers                       : latest=2.3.2, local=2.3.2
+osrf_pycommon                             : latest=2.1.6, local=2.1.6
+ros2pkg                                   : latest=0.18.20, local=0.18.20
+fastrtps_cmake_module                     : latest=2.2.4, local=2.2.4
+rviz_rendering                            : latest=11.2.29, local=11.2.29
+orocos_kdl_vendor                         : latest=0.2.5, local=0.2.5
+launch_testing_ament_cmake                : latest=1.0.15, local=1.0.15
+rviz2                                     : latest=11.2.29, local=11.2.29
+composition_interfaces                    : latest=1.2.3, local=1.2.3
+ament_cppcheck                            : latest=0.12.15, local=0.12.15
+libcurl_vendor                            : latest=3.1.3, local=3.1.3
+ament_index_cpp                           : latest=1.4.1, local=1.4.1
+actionlib_msgs                            : latest=4.9.2, local=4.9.2
+ament_cmake_version                       : latest=1.3.14, local=1.3.14
+pybind11_vendor                           : latest=2.4.2, local=2.4.2
+rcl                                       : latest=5.3.13, local=5.3.13
+rosidl_default_generators                 : latest=1.2.1, local=1.2.1
+rclpy                                     : latest=3.3.22, local=3.3.22
+tf2_eigen_kdl                             : latest=0.25.24, local=0.25.23
+
+========== 5. 所需 ROS2 软件包 ==========
+[已安装] rclpy -> /opt/ros/humble
+[已安装] tf2_ros -> /opt/ros/humble
+[已安装] cv_bridge -> /opt/ros/humble
+[缺失] nav2_bringup
+[缺失] nav2_controller
+[缺失] nav2_planner
+[缺失] slam_toolbox
+[缺失] pointcloud_to_laserscan
+[缺失] robot_localization
+[缺失] unitree_api
+[缺失] unitree_go
+
+========== 6. 当前 ROS2 节点 ==========
+/go2_camera_bridge
+/go2_camera_info_publisher
+
+========== 7. 当前关键话题 ==========
+
+--- /camera/image_raw ---
+sensor_msgs/msg/Image
+Type: sensor_msgs/msg/Image
+
+Publisher count: 1
+
+Node name: go2_camera_bridge
+Node namespace: /
+Topic type: sensor_msgs/msg/Image
+Endpoint type: PUBLISHER
+GID: 01.10.10.66.5a.c5.08.a9.99.9d.23.19.00.00.14.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (10)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 0
+
+
+--- /camera/camera_info ---
+sensor_msgs/msg/CameraInfo
+Type: sensor_msgs/msg/CameraInfo
+
+Publisher count: 1
+
+Node name: go2_camera_info_publisher
+Node namespace: /
+Topic type: sensor_msgs/msg/CameraInfo
+Endpoint type: PUBLISHER
+GID: 01.10.fe.5e.31.25.8b.95.61.ea.15.c7.00.00.14.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (10)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 0
+
+
+--- /utlidar/cloud_base ---
+sensor_msgs/msg/PointCloud2
+Type: sensor_msgs/msg/PointCloud2
+
+Publisher count: 1
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: sensor_msgs/msg/PointCloud2
+Endpoint type: PUBLISHER
+GID: 01.10.8f.4c.16.f8.a4.94.64.31.2e.1a.00.00.13.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 0
+
+
+--- /utlidar/robot_odom ---
+nav_msgs/msg/Odometry
+Type: nav_msgs/msg/Odometry
+
+Publisher count: 1
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: nav_msgs/msg/Odometry
+Endpoint type: PUBLISHER
+GID: 01.10.8f.4c.16.f8.a4.94.64.31.2e.1a.00.00.15.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 0
+
+
+--- /api/obstacles_avoid/request ---
+unitree_api/msg/Request
+Type: unitree_api/msg/Request
+
+Publisher count: 5
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.46.8d.3a.fe.f9.23.c1.87.a8.ac.00.00.06.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.55.d5.99.6a.e5.44.1c.cd.39.5b.00.00.1e.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.91.13.08.86.7e.ef.b5.75.a5.0f.00.00.06.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.98.1a.21.a8.98.81.d0.73.c2.2f.00.00.06.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.c4.01.94.f5.69.71.86.e1.b1.42.00.00.24.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 1
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: SUBSCRIPTION
+
+--- /api/obstacles_avoid/response ---
+unitree_api/msg/Response
+Type: unitree_api/msg/Response
+
+Publisher count: 1
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: PUBLISHER
+GID: 01.10.94.03.5c.c5.02.80.46.2b.db.9f.00.00.0e.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 4
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.55.d5.99.6a.e5.44.1c.cd.39.5b.00.00.20.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.91.13.08.86.7e.ef.b5.75.a5.0f.00.00.08.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.98.1a.21.a8.98.81.d0.73.c2.2f.00.00.08.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.c4.01.94.f5.69.71.86.e1.b1.42.00.00.6a.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+
+--- /api/sport/request ---
+unitree_api/msg/Request
+Type: unitree_api/msg/Request
+
+Publisher count: 11
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.46.8d.3a.fe.f9.23.c1.87.a8.ac.00.00.04.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.55.d5.99.6a.e5.44.1c.cd.39.5b.00.00.26.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.5b.0c.fa.f0.b3.ed.97.52.0b.03.00.00.10.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.5b.0c.fa.f0.b3.ed.97.52.0b.03.00.00.13.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.5b.0c.fa.f0.b3.ed.97.52.0b.03.00.00.15.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Request
+Endpoint type: PUBLISHER
+GID: 01.10.91.13.08.86.7e.ef.b5.75.a5.0f.00.00.0a.03.00.00.00.00.00.00.00.00
+QoS profile:
+
+--- /api/sport/response ---
+unitree_api/msg/Response
+Type: unitree_api/msg/Response
+
+Publisher count: 1
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: PUBLISHER
+GID: 01.10.b6.f0.84.6b.de.de.40.21.54.19.00.00.0a.03.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: RELIABLE
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Subscription count: 10
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.55.d5.99.6a.e5.44.1c.cd.39.5b.00.00.28.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.5b.0c.fa.f0.b3.ed.97.52.0b.03.00.00.12.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.5b.0c.fa.f0.b3.ed.97.52.0b.03.00.00.14.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+GID: 01.10.5b.0c.fa.f0.b3.ed.97.52.0b.03.00.00.16.04.00.00.00.00.00.00.00.00
+QoS profile:
+  Reliability: BEST_EFFORT
+  History (Depth): KEEP_LAST (1)
+  Durability: VOLATILE
+  Lifespan: Infinite
+  Deadline: Infinite
+  Liveliness: AUTOMATIC
+  Liveliness lease duration: Infinite
+
+Node name: _CREATED_BY_BARE_DDS_APP_
+Node namespace: _CREATED_BY_BARE_DDS_APP_
+Topic type: unitree_api/msg/Response
+Endpoint type: SUBSCRIPTION
+
+========== 8. 关键传感器频率 ==========
+
+--- /camera/image_raw ---
+average rate: 14.148
+	min: 0.064s max: 0.100s std dev: 0.01108s window: 16
+average rate: 14.075
+	min: 0.064s max: 0.100s std dev: 0.01130s window: 30
+average rate: 14.074
+	min: 0.064s max: 0.100s std dev: 0.01136s window: 45
+average rate: 14.055
+	min: 0.064s max: 0.100s std dev: 0.01144s window: 59
+
+--- /camera/camera_info ---
+average rate: 10.001
+	min: 0.100s max: 0.100s std dev: 0.00010s window: 11
+average rate: 10.001
+	min: 0.100s max: 0.100s std dev: 0.00010s window: 22
+average rate: 10.000
+	min: 0.100s max: 0.100s std dev: 0.00010s window: 32
+average rate: 10.000
+	min: 0.100s max: 0.100s std dev: 0.00013s window: 42
+
+--- /utlidar/cloud_base ---
+average rate: 15.377
+	min: 0.064s max: 0.066s std dev: 0.00063s window: 17
+average rate: 15.386
+	min: 0.063s max: 0.066s std dev: 0.00068s window: 33
+average rate: 15.382
+	min: 0.063s max: 0.067s std dev: 0.00066s window: 49
+average rate: 15.383
+	min: 0.063s max: 0.067s std dev: 0.00063s window: 65
+
+--- /utlidar/robot_odom ---
+average rate: 194.830
+	min: 0.004s max: 0.008s std dev: 0.00097s window: 196
+average rate: 194.235
+	min: 0.004s max: 0.008s std dev: 0.00096s window: 390
+average rate: 194.675
+	min: 0.004s max: 0.008s std dev: 0.00096s window: 586
+average rate: 194.815
+	min: 0.004s max: 0.008s std dev: 0.00096s window: 782
+failed to initialize wait set: the given context is not valid, either rcl_init() was not called or rcl_shutdown() was called., at ./src/rcl/wait.c:130
+
+========== 9. 消息 frame_id 和时间戳 ==========
+
+--- /camera/image_raw ---
+stamp:
+  sec: 1791880407
+  nanosec: 495170422
+frame_id: camera_optical_frame
+---
+
+--- /camera/camera_info ---
+stamp:
+  sec: 1791880409
+  nanosec: 9136267
+frame_id: camera_optical_frame
+---
+
+--- /utlidar/cloud_base ---
+stamp:
+  sec: 1791880313
+  nanosec: 98345994
+frame_id: base_link
+---
+
+--- /utlidar/robot_odom ---
+stamp:
+  sec: 1791880314
+  nanosec: 560148715
+frame_id: odom
+---
+
+========== 10. Unitree API 消息结构 ==========
+Unknown package 'unitree_api'
+Unknown package 'unitree_api'
+
+========== 11. TF 检查 ==========
+[INFO] [1791880413.076259344] [tf2_echo]: Waiting for transform odom ->  base_link: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880415.024767093] [tf2_echo]: Waiting for transform odom ->  base_link: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880417.024762238] [tf2_echo]: Waiting for transform odom ->  base_link: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880419.024768882] [tf2_echo]: Waiting for transform odom ->  base_link: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880420.796312096] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [1791880421.042823605] [tf2_echo]: Waiting for transform base_link ->  camera_optical_frame: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880423.034622833] [tf2_echo]: Waiting for transform base_link ->  camera_optical_frame: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880424.034625930] [tf2_echo]: Waiting for transform base_link ->  camera_optical_frame: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880426.034622041] [tf2_echo]: Waiting for transform base_link ->  camera_optical_frame: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880427.034628664] [tf2_echo]: Waiting for transform base_link ->  camera_optical_frame: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880428.034629021] [tf2_echo]: Waiting for transform base_link ->  camera_optical_frame: Invalid frame ID "base_link" passed to canTransform argument target_frame - frame does not exist
+[INFO] [1791880428.799940434] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+
+========== 12. 项目文件 ==========
+项目目录存在：/home/user/桌面/robot/detection
+/home/user/桌面/robot/detection/go2_camera_parameters.yaml
+/home/user/桌面/robot/detection/go2_scissors_rgb_lidar.py
+/home/user/桌面/robot/detection/go2_yolo26_live_demo.py
+
+========== 检查完成 ==========
+日志位置：/home/user/go2_environment_check.txt

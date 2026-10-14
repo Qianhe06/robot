@@ -1,0 +1,104 @@
+========== /scan 频率 ==========
+average rate: 46.116
+	min: 0.000s max: 0.075s std dev: 0.03011s window: 48
+average rate: 46.144
+	min: 0.000s max: 0.081s std dev: 0.03030s window: 96
+average rate: 46.062
+	min: 0.000s max: 0.081s std dev: 0.03029s window: 144
+average rate: 46.132
+	min: 0.000s max: 0.081s std dev: 0.03023s window: 192
+
+========== odom -> base_link ==========
+[INFO] [1791882580.221732009] [tf2_echo]: Waiting for transform odom ->  base_link: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+At time 1791882581.210558891
+- Translation: [5.251, 6.370, 0.022]
+- Rotation: in Quaternion (xyzw) [0.062, -0.019, 0.911, -0.407]
+- Rotation: in RPY (radian) [-0.086, -0.097, -2.297]
+- Rotation: in RPY (degree) [-4.923, -5.544, -131.598]
+- Matrix:
+ -0.661  0.740  0.128  5.251
+ -0.744 -0.668  0.015  6.370
+  0.097 -0.085  0.992  0.022
+  0.000  0.000  0.000  1.000
+At time 1791882582.208698034
+- Translation: [5.250, 6.369, 0.022]
+- Rotation: in Quaternion (xyzw) [0.062, -0.019, 0.911, -0.407]
+- Rotation: in RPY (radian) [-0.086, -0.097, -2.297]
+- Rotation: in RPY (degree) [-4.924, -5.552, -131.628]
+- Matrix:
+ -0.661  0.739  0.128  5.250
+ -0.744 -0.668  0.015  6.369
+  0.097 -0.085  0.992  0.022
+  0.000  0.000  0.000  1.000
+At time 1791882583.210605383
+- Translation: [5.250, 6.369, 0.022]
+- Rotation: in Quaternion (xyzw) [0.062, -0.019, 0.911, -0.407]
+- Rotation: in RPY (radian) [-0.086, -0.097, -2.297]
+- Rotation: in RPY (degree) [-4.917, -5.562, -131.616]
+- Matrix:
+ -0.661  0.739  0.128  5.250
+ -0.744 -0.668  0.015  6.369
+  0.097 -0.085  0.992  0.022
+  0.000  0.000  0.000  1.000
+At time 1791882584.210589886
+- Translation: [5.249, 6.369, 0.022]
+- Rotation: in Quaternion (xyzw) [0.062, -0.019, 0.911, -0.407]
+- Rotation: in RPY (radian) [-0.086, -0.097, -2.297]
+- Rotation: in RPY (degree) [-4.912, -5.535, -131.614]
+- Matrix:
+ -0.661  0.739  0.128  5.249
+ -0.744 -0.668  0.015  6.369
+  0.096 -0.085  0.992  0.022
+  0.000  0.000  0.000  1.000
+[INFO] [1791882584.997898713] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+
+========== map -> odom ==========
+[INFO] [1791882585.272892108] [tf2_echo]: Waiting for transform map ->  odom: Invalid frame ID "map" passed to canTransform argument target_frame - frame does not exist
+At time 1791882586.314191294
+- Translation: [0.079, -0.016, -0.792]
+- Rotation: in Quaternion (xyzw) [0.008, -0.064, 0.002, 0.998]
+- Rotation: in RPY (radian) [0.015, -0.129, 0.003]
+- Rotation: in RPY (degree) [0.859, -7.383, 0.185]
+- Matrix:
+  0.992 -0.005 -0.128  0.079
+  0.003  1.000 -0.015 -0.016
+  0.129  0.015  0.992 -0.792
+  0.000  0.000  0.000  1.000
+At time 1791882587.354690742
+- Translation: [0.079, -0.016, -0.792]
+- Rotation: in Quaternion (xyzw) [0.008, -0.064, 0.002, 0.998]
+- Rotation: in RPY (radian) [0.015, -0.129, 0.003]
+- Rotation: in RPY (degree) [0.859, -7.383, 0.185]
+- Matrix:
+  0.992 -0.005 -0.128  0.079
+  0.003  1.000 -0.015 -0.016
+  0.129  0.015  0.992 -0.792
+  0.000  0.000  0.000  1.000
+At time 1791882588.329253149
+- Translation: [0.079, -0.016, -0.792]
+- Rotation: in Quaternion (xyzw) [0.008, -0.064, 0.002, 0.998]
+- Rotation: in RPY (radian) [0.015, -0.129, 0.003]
+- Rotation: in RPY (degree) [0.859, -7.383, 0.185]
+- Matrix:
+  0.992 -0.005 -0.128  0.079
+  0.003  1.000 -0.015 -0.016
+  0.129  0.015  0.992 -0.792
+  0.000  0.000  0.000  1.000
+At time 1791882589.304225874
+- Translation: [0.079, -0.016, -0.792]
+- Rotation: in Quaternion (xyzw) [0.008, -0.064, 0.002, 0.998]
+- Rotation: in RPY (radian) [0.015, -0.129, 0.003]
+- Rotation: in RPY (degree) [0.859, -7.383, 0.185]
+- Matrix:
+  0.992 -0.005 -0.128  0.079
+  0.003  1.000 -0.015 -0.016
+  0.129  0.015  0.992 -0.792
+  0.000  0.000  0.000  1.000
+[INFO] [1791882590.001721941] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+
+========== SLAM 话题 ==========
+/map
+/map_metadata
+/scan
+/tf
+/tf_static

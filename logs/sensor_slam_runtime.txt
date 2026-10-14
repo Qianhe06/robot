@@ -1,0 +1,94 @@
+[INFO] [launch]: All log files can be found below /home/user/.ros/log/2026-10-13-17-09-26-057240-user-W40P-731809
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [time_sync_node-1]: process started with pid [731830]
+[INFO] [odom_tf_node-2]: process started with pid [731832]
+[INFO] [static_transform_publisher-3]: process started with pid [731834]
+[INFO] [pointcloud_to_laserscan_node-4]: process started with pid [731836]
+[INFO] [async_slam_toolbox_node-5]: process started with pid [731838]
+[static_transform_publisher-3] [INFO] [1791882566.150654767] [camera_static_tf]: Spinning until stopped - publishing transform
+[static_transform_publisher-3] translation: ('0.357167', '0.013332', '-0.012932')
+[static_transform_publisher-3] rotation: ('-0.506139', '0.461295', '-0.510885', '0.519641')
+[static_transform_publisher-3] from 'base_link' to 'camera_optical_frame'
+[async_slam_toolbox_node-5] [INFO] [1791882566.453834264] [slam_toolbox]: Using solver plugin solver_plugins::CeresSolver
+[async_slam_toolbox_node-5] [INFO] [1791882566.455079568] [slam_toolbox]: CeresSolver: Using SCHUR_JACOBI preconditioner.
+[pointcloud_to_laserscan_node-4] [INFO] [1791882566.467112315] [pointcloud_to_laserscan]: Got a subscriber to laserscan, starting pointcloud subscriber
+[async_slam_toolbox_node-5] [INFO] [1791882566.484931929] [slam_toolbox]: Message Filter dropping message: frame 'base_link' at time 1791882566.416 for reason 'discarding message because the queue is full'
+[time_sync_node-1] [INFO] [1791882566.656684364] [sensor_time_sync]: 传感器时间校正节点已启动
+[odom_tf_node-2] [INFO] [1791882566.745844237] [odom_tf_broadcaster]: 开始发布 odom -> base_link
+[async_slam_toolbox_node-5] [WARN] [1791882566.811255497] [slam_toolbox]: minimum laser range setting (0.0 m) exceeds the capabilities of the used Lidar (0.2 m)
+[async_slam_toolbox_node-5] Info: clipped range threshold to be within minimum and maximum range!
+[async_slam_toolbox_node-5] Registering sensor: [Custom Described Lidar]
+[time_sync_node-1] [INFO] [1791882568.623668538] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.106s
+[time_sync_node-1] [INFO] [1791882570.623916828] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.108s
+[time_sync_node-1] [INFO] [1791882572.623747611] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.082s
+[time_sync_node-1] [INFO] [1791882574.623575880] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.108s
+[time_sync_node-1] [INFO] [1791882576.623629443] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.104s
+[time_sync_node-1] [INFO] [1791882578.623891965] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.108s
+[time_sync_node-1] [INFO] [1791882580.623583479] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.114s
+[time_sync_node-1] [INFO] [1791882582.625102864] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.111s
+[time_sync_node-1] [INFO] [1791882584.623588027] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.103s
+[time_sync_node-1] [INFO] [1791882586.632625686] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.107s
+[time_sync_node-1] [INFO] [1791882588.624852472] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.112s
+[WARNING] [launch]: user interrupted with ctrl-c (SIGINT)
+[time_sync_node-1] [INFO] [1791882590.623787094] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.107s
+[time_sync_node-1] [INFO] [1791882592.635903090] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.096s
+[time_sync_node-1] [INFO] [1791882594.624403805] [sensor_time_sync]: 机器人时钟校正量=97.187s，相机接收偏差=0.118s
+[ERROR] [async_slam_toolbox_node-5]: process[async_slam_toolbox_node-5] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[ERROR] [pointcloud_to_laserscan_node-4]: process[pointcloud_to_laserscan_node-4] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[ERROR] [static_transform_publisher-3]: process[static_transform_publisher-3] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[ERROR] [odom_tf_node-2]: process[odom_tf_node-2] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[ERROR] [time_sync_node-1]: process[time_sync_node-1] failed to terminate '5' seconds after receiving 'SIGINT', escalating to 'SIGTERM'
+[INFO] [async_slam_toolbox_node-5]: sending signal 'SIGTERM' to process[async_slam_toolbox_node-5]
+[INFO] [pointcloud_to_laserscan_node-4]: sending signal 'SIGTERM' to process[pointcloud_to_laserscan_node-4]
+[INFO] [static_transform_publisher-3]: sending signal 'SIGTERM' to process[static_transform_publisher-3]
+[INFO] [odom_tf_node-2]: sending signal 'SIGTERM' to process[odom_tf_node-2]
+[INFO] [time_sync_node-1]: sending signal 'SIGTERM' to process[time_sync_node-1]
+[async_slam_toolbox_node-5] [INFO] [1791882595.610559188] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[pointcloud_to_laserscan_node-4] [INFO] [1791882595.611418301] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[static_transform_publisher-3] [INFO] [1791882595.612037682] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+[INFO] [async_slam_toolbox_node-5]: process has finished cleanly [pid 731838]
+[INFO] [static_transform_publisher-3]: process has finished cleanly [pid 731834]
+[INFO] [pointcloud_to_laserscan_node-4]: process has finished cleanly [pid 731836]
+[time_sync_node-1] Traceback (most recent call last):
+[time_sync_node-1]   File "/home/user/桌面/robot/detection/ros2_ws/build/go2_scissors_search/go2_scissors_search/time_sync_node.py", line 149, in main
+[time_sync_node-1]     rclpy.spin(node)
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 229, in spin
+[time_sync_node-1]     executor.spin_once()
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 812, in spin_once
+[time_sync_node-1]     self._spin_once_impl(timeout_sec)
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 801, in _spin_once_impl
+[time_sync_node-1]     handler, entity, node = self.wait_for_ready_callbacks(timeout_sec=timeout_sec)
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 784, in wait_for_ready_callbacks
+[time_sync_node-1]     return next(self._cb_iter)
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 685, in _wait_for_ready_callbacks
+[time_sync_node-1]     raise ExternalShutdownException()
+[time_sync_node-1] rclpy.executors.ExternalShutdownException
+[time_sync_node-1] 
+[time_sync_node-1] During handling of the above exception, another exception occurred:
+[time_sync_node-1] 
+[time_sync_node-1] Traceback (most recent call last):
+[time_sync_node-1]   File "/home/user/桌面/robot/detection/ros2_ws/install/go2_scissors_search/lib/go2_scissors_search/time_sync_node", line 33, in <module>
+[time_sync_node-1]     sys.exit(load_entry_point('go2-scissors-search', 'console_scripts', 'time_sync_node')())
+[time_sync_node-1]   File "/home/user/桌面/robot/detection/ros2_ws/build/go2_scissors_search/go2_scissors_search/time_sync_node.py", line 154, in main
+[time_sync_node-1]     rclpy.shutdown()
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 130, in shutdown
+[time_sync_node-1]     _shutdown(context=context)
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/utilities.py", line 58, in shutdown
+[time_sync_node-1]     return context.shutdown()
+[time_sync_node-1]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/context.py", line 102, in shutdown
+[time_sync_node-1]     self.__context.shutdown()
+[time_sync_node-1] rclpy._rclpy_pybind11.RCLError: failed to shutdown: rcl_shutdown already called on the given context, at ./src/rcl/init.c:241
+[ERROR] [time_sync_node-1]: process has died [pid 731830, exit code 1, cmd '/home/user/桌面/robot/detection/ros2_ws/install/go2_scissors_search/lib/go2_scissors_search/time_sync_node --ros-args -r __node:=sensor_time_sync --params-file /tmp/launch_params_1m1zuu3l'].
+[odom_tf_node-2] Traceback (most recent call last):
+[odom_tf_node-2]   File "/home/user/桌面/robot/detection/ros2_ws/install/go2_scissors_search/lib/go2_scissors_search/odom_tf_node", line 33, in <module>
+[odom_tf_node-2]     sys.exit(load_entry_point('go2-scissors-search', 'console_scripts', 'odom_tf_node')())
+[odom_tf_node-2]   File "/home/user/桌面/robot/detection/ros2_ws/build/go2_scissors_search/go2_scissors_search/odom_tf_node.py", line 63, in main
+[odom_tf_node-2]     rclpy.shutdown()
+[odom_tf_node-2]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 130, in shutdown
+[odom_tf_node-2]     _shutdown(context=context)
+[odom_tf_node-2]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/utilities.py", line 58, in shutdown
+[odom_tf_node-2]     return context.shutdown()
+[odom_tf_node-2]   File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/context.py", line 102, in shutdown
+[odom_tf_node-2]     self.__context.shutdown()
+[odom_tf_node-2] rclpy._rclpy_pybind11.RCLError: failed to shutdown: rcl_shutdown already called on the given context, at ./src/rcl/init.c:241
+[ERROR] [odom_tf_node-2]: process has died [pid 731832, exit code 1, cmd '/home/user/桌面/robot/detection/ros2_ws/install/go2_scissors_search/lib/go2_scissors_search/odom_tf_node --ros-args -r __node:=odom_tf_broadcaster'].

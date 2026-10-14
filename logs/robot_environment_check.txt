@@ -1,0 +1,75 @@
+========== Conda 环境 ==========
+CONDA_DEFAULT_ENV=robot
+CONDA_PREFIX=/home/user/miniconda3/envs/robot
+Python=/home/user/miniconda3/envs/robot/bin/python
+Python 3.10.22
+pip 26.2.1 from /home/user/miniconda3/envs/robot/lib/python3.10/site-packages/pip (python 3.10)
+
+========== Python 依赖 ==========
+[正常] numpy: 1.26.4
+       路径: /home/user/miniconda3/envs/robot/lib/python3.10/site-packages/numpy/__init__.py
+[正常] cv2: 4.11.0
+       路径: /home/user/miniconda3/envs/robot/lib/python3.10/site-packages/cv2/__init__.py
+[正常] torch: 2.6.0+cu124
+       路径: /home/user/miniconda3/envs/robot/lib/python3.10/site-packages/torch/__init__.py
+[正常] ultralytics: 8.4.176
+       路径: /home/user/miniconda3/envs/robot/lib/python3.10/site-packages/ultralytics/__init__.py
+[正常] open3d: 0.20.0
+       路径: /home/user/.local/lib/python3.10/site-packages/open3d/__init__.py
+[正常] rclpy: 无版本信息
+       路径: /opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py
+[正常] cv_bridge: 无版本信息
+       路径: /opt/ros/humble/local/lib/python3.10/dist-packages/cv_bridge/__init__.py
+CUDA available: True
+CUDA version: 12.4
+GPU count: 2
+GPU 0: NVIDIA GeForce RTX 4090
+GPU 1: NVIDIA GeForce RTX 4090
+
+========== 加载 ROS2 ==========
+[正常] 已加载 Unitree：/home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/setup.bash
+
+========== ROS2 与 Python 兼容性 ==========
+ROS_DISTRO=humble
+ros2=/opt/ros/humble/bin/ros2
+[正常] rclpy: /opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py
+[正常] cv_bridge: /opt/ros/humble/local/lib/python3.10/dist-packages/cv_bridge/__init__.py
+
+========== ROS2 包 ==========
+[正常] unitree_api -> /home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/unitree_api
+[正常] unitree_go -> /home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/unitree_go
+[缺失] nav2_bringup
+[缺失] slam_toolbox
+[缺失] pointcloud_to_laserscan
+[缺失] robot_localization
+
+========== 当前关键话题 ==========
+/api/obstacles_avoid/request
+/api/obstacles_avoid/response
+/api/sport/request
+/api/sport/response
+/api/sport_lease/request
+/api/sport_lease/response
+/camera/camera_info
+/camera/image_raw
+/lf/sportmodestate
+/mf/sportmodestate
+/sportmodestate
+/utlidar/client_cmd
+/utlidar/cloud
+/utlidar/cloud_base
+/utlidar/cloud_deskewed
+/utlidar/grid_map
+/utlidar/height_map
+/utlidar/height_map_array
+/utlidar/imu
+/utlidar/lidar_state
+/utlidar/mapping_cmd
+/utlidar/range_info
+/utlidar/range_map
+/utlidar/robot_odom
+/utlidar/robot_pose
+/utlidar/server_log
+/utlidar/switch
+/utlidar/voxel_map
+/utlidar/voxel_map_compressed

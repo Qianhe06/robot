@@ -1,0 +1,180 @@
+[INFO] [launch]: All log files can be found below /home/user/.ros/log/2026-10-13-17-15-00-769620-user-W40P-741019
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [time_sync_node-1]: process started with pid [741021]
+[INFO] [odom_tf_node-2]: process started with pid [741023]
+[INFO] [static_transform_publisher-3]: process started with pid [741025]
+[INFO] [pointcloud_to_laserscan_node-4]: process started with pid [741027]
+[INFO] [async_slam_toolbox_node-5]: process started with pid [741029]
+[static_transform_publisher-3] [INFO] [1791882900.853518888] [camera_static_tf]: Spinning until stopped - publishing transform
+[static_transform_publisher-3] translation: ('0.357167', '0.013332', '-0.012932')
+[static_transform_publisher-3] rotation: ('-0.506139', '0.461295', '-0.510885', '0.519641')
+[static_transform_publisher-3] from 'base_link' to 'camera_optical_frame'
+[async_slam_toolbox_node-5] [INFO] [1791882901.137828452] [slam_toolbox]: Using solver plugin solver_plugins::CeresSolver
+[async_slam_toolbox_node-5] [INFO] [1791882901.138739833] [slam_toolbox]: CeresSolver: Using SCHUR_JACOBI preconditioner.
+[pointcloud_to_laserscan_node-4] [INFO] [1791882901.184494813] [pointcloud_to_laserscan]: Got a subscriber to laserscan, starting pointcloud subscriber
+[time_sync_node-1] [INFO] [1791882901.359296439] [sensor_time_sync]: 传感器时间校正节点已启动
+[odom_tf_node-2] [INFO] [1791882901.380119377] [odom_tf_broadcaster]: 开始发布 odom -> base_footprint -> base_link
+[async_slam_toolbox_node-5] [WARN] [1791882901.460377728] [slam_toolbox]: minimum laser range setting (0.2 m) exceeds the capabilities of the used Lidar (0.2 m)
+[async_slam_toolbox_node-5] Info: clipped range threshold to be within minimum and maximum range!
+[async_slam_toolbox_node-5] Registering sensor: [Custom Described Lidar]
+[time_sync_node-1] [INFO] [1791882903.336641468] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882905.336853770] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.021s
+[time_sync_node-1] [INFO] [1791882907.336642324] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.018s
+[time_sync_node-1] [INFO] [1791882909.336830310] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.017s
+[pointcloud_to_laserscan_node-4] [INFO] [1791882911.331350113] [pointcloud_to_laserscan]: Message Filter dropping message: frame 'base_link' at time 1791882901.327 for reason 'the timestamp on the message is earlier than all the data in the transform cache'
+[time_sync_node-1] [INFO] [1791882911.336905637] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.017s
+[time_sync_node-1] [INFO] [1791882913.336700757] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882915.336515078] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882917.336550271] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882919.337134388] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882921.336522796] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882923.336791236] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882925.336536319] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882927.336512265] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882929.336519283] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882931.336527854] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882933.336684598] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882935.336782554] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882937.336530563] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882939.336682385] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882941.336641160] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882943.336694868] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882945.336686250] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882947.336617394] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882949.337357502] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882951.336534452] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882953.336664687] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882955.336853794] [sensor_time_sync]: 机器人时钟校正量=97.191s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882957.336768045] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882959.336573260] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882961.337164038] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882963.336553240] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882965.336532296] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882967.336733146] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882969.336620529] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882971.336662367] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882973.337011889] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882975.336675964] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882977.336706704] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882979.336598098] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882981.337130346] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882983.336593698] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882985.336592646] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882987.336848257] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882989.337098763] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882991.336524183] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882993.336606218] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882995.336556768] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882997.337140433] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791882999.336902771] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883001.336619925] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883003.336631644] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883005.336530638] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883007.336883047] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883009.336615842] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883011.336543401] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883013.336540345] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883015.336542745] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883017.336551510] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883019.336551291] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883021.336563546] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883023.336705928] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883025.336855345] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883027.336559357] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883029.337151556] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883031.336718070] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883033.336584800] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883035.336526515] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883037.336547257] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883039.336778405] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883041.336531638] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883043.336552038] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883045.336875763] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883047.336725585] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883049.337038573] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883051.336550496] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883053.336675427] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883055.336527504] [sensor_time_sync]: 机器人时钟校正量=97.192s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883057.336529218] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883059.336533147] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883061.336532464] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883063.336534677] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883065.336550447] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883067.336653353] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883069.336603386] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883071.336510836] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883073.336613293] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883075.336554267] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883077.336521157] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883079.336543405] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883081.336540159] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883083.336522641] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883085.336557860] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883087.336535876] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883089.336523270] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883091.336684231] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883093.336698998] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883095.336513734] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883097.336514437] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883099.336531657] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883101.337149945] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883103.336551891] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883105.336573913] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883107.336521874] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883109.336539072] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883111.336518669] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883113.336522613] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883115.336556595] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883117.336535725] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883119.336727483] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883121.336556170] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883123.336724814] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883125.336557036] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883127.336535696] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883129.336554765] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883131.336717832] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883133.336689908] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883135.336534851] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883137.336517873] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883139.336595023] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883141.336533152] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883143.336512790] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883145.336700356] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883147.336514130] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883149.336529763] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883151.336548446] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883153.336518007] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883155.336526566] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883157.337927944] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883159.336522601] [sensor_time_sync]: 机器人时钟校正量=97.193s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883161.336515648] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883163.336593453] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883165.336730477] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883167.336522810] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883169.336519302] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883171.336567003] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883173.336520004] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883175.336510844] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883177.336700323] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883179.336525502] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883181.336552750] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883183.336543487] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883185.336577074] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883187.336576380] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883189.336705075] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883191.336709131] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883193.336604956] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883195.336545900] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883197.336503974] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883199.336517798] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883201.336501462] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883203.336520245] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883205.336707838] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883207.336527462] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883209.336512914] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883211.336537978] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883213.336807720] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883215.336556744] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883217.336516627] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883219.336682170] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s
+[time_sync_node-1] [INFO] [1791883221.336532654] [sensor_time_sync]: 机器人时钟校正量=97.194s，相机接收偏差=0.016s

@@ -1,0 +1,163 @@
+# Go2 camera and RGB-LiDAR calibration parameters
+# Image mode used during calibration: 1920 x 1080
+
+camera_name: go2_front_camera
+camera_frame: camera_optical_frame
+base_frame: base_link
+image_topic: /camera/image_raw
+camera_info_topic: /camera/camera_info
+point_cloud_topic: /utlidar/cloud_base
+
+image_width: 1920
+image_height: 1080
+
+# OpenCV/ROS pinhole camera model.
+camera_matrix:
+  rows: 3
+  cols: 3
+  data:
+    - 1201.706408041866
+    - 0.0
+    - 953.699119419175
+    - 0.0
+    - 1198.7111950196766
+    - 542.6904444443824
+    - 0.0
+    - 0.0
+    - 1.0
+
+intrinsics:
+  fx: 1201.706408041866
+  fy: 1198.7111950196766
+  cx: 953.699119419175
+  cy: 542.6904444443824
+
+distortion_model: plumb_bob
+distortion_coefficients:
+  # Coefficient order: k1, k2, p1, p2, k3
+  rows: 1
+  cols: 5
+  data:
+    - -0.3740214062560257
+    - 0.15086269174623365
+    - 0.00038964098252272926
+    - 0.0002422540928967675
+    - -0.03119383791829836
+
+rectification_matrix:
+  rows: 3
+  cols: 3
+  data:
+    - 1.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+    - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+
+projection_matrix:
+  rows: 3
+  cols: 4
+  data:
+    - 1201.706408041866
+    - 0.0
+    - 953.699119419175
+    - 0.0
+    - 0.0
+    - 1198.7111950196766
+    - 542.6904444443824
+    - 0.0
+    - 0.0
+    - 0.0
+    - 1.0
+    - 0.0
+
+# Current RGB-LiDAR extrinsic used by go2_scissors_rgb_lidar.py.
+# Convention: p_camera = R_camera_base * p_base + t_camera_base
+# This transform maps base_link coordinates to camera_optical_frame.
+extrinsic_base_to_camera:
+  status: provisional
+  source: 11_pose_joint_optimization
+  rotation_matrix:
+    rows: 3
+    cols: 3
+    data:
+      - 0.052406962
+      - -0.997912281
+      - 0.037743734
+      - 0.063994729
+      - -0.034362001
+      - -0.997358475
+      - 0.996573221
+      - 0.054683928
+      - 0.062060318
+  translation_m:
+    - -0.004925410
+    - -0.035296691
+    - -0.355869834
+  homogeneous_matrix:
+    rows: 4
+    cols: 4
+    data:
+      - 0.052406962
+      - -0.997912281
+      - 0.037743734
+      - -0.004925410
+      - 0.063994729
+      - -0.034362001
+      - -0.997358475
+      - -0.035296691
+      - 0.996573221
+      - 0.054683928
+      - 0.062060318
+      - -0.355869834
+      - 0.0
+      - 0.0
+      - 0.0
+      - 1.0
+
+# Inverse transform: p_base = R_base_camera * p_camera + t_base_camera
+extrinsic_camera_to_base:
+  rotation_matrix:
+    rows: 3
+    cols: 3
+    data:
+      - 0.052406962
+      - 0.063994729
+      - 0.996573221
+      - -0.997912281
+      - -0.034362001
+      - 0.054683928
+      - 0.037743734
+      - -0.997358475
+      - 0.062060318
+  translation_m:
+    - 0.357167274676
+    - 0.013332368320
+    - -0.012932155479
+
+calibration_quality:
+  intrinsic:
+    source_images: 32
+    image_point_coverage_ratio: 0.7883
+    rms_reprojection_error_px: 0.6154
+    rms_after_excluding_bent_board_image_px: 0.4953
+    assessment: usable
+  extrinsic:
+    matched_poses: 11
+    plane_normal_rms_deg: 3.9901
+    plane_distance_rms_mm: 29.014
+    leave_one_out_median_rotation_change_deg: 0.7540
+    leave_one_out_max_rotation_change_deg: 1.6298
+    leave_one_out_median_translation_change_mm: 15.194
+    leave_one_out_max_translation_change_mm: 133.375
+    assessment: usable_for_coarse_projection_recalibration_recommended
+
+usage_notes:
+  - These intrinsics are valid only for the 1920x1080 image mode.
+  - Pass the distortion coefficients to cv2.projectPoints when projecting onto the raw image.
+  - If the image is undistorted first, use the corresponding new camera matrix and zero distortion.
+  - The current extrinsic is suitable for coarse RGB-LiDAR association but is not validated for centimeter-level localization.

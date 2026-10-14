@@ -1,0 +1,9 @@
+Starting >>> go2_scissors_search
+--- stderr: go2_scissors_search
+/usr/lib/python3/dist-packages/pkg_resources/__init__.py:116: PkgResourcesDeprecationWarning: 1.16.0-unknown is an invalid version and will not be supported in a future release
+  warnings.warn(
+---
+Finished <<< go2_scissors_search [1.81s]
+
+Summary: 1 package finished [2.24s]
+  1 package had stderr output: go2_scissors_search

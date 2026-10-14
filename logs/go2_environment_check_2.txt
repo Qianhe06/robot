@@ -1,0 +1,40 @@
+========== 查找 ROS2 工作空间 ==========
+/home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/local_setup.bash
+/home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/setup.bash
+
+========== 加载 Unitree ROS2 环境 ==========
+[正常] 已加载 /home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/setup.bash
+
+========== Unitree ROS 包 ==========
+[正常] unitree_api -> /home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/unitree_api
+[正常] unitree_go -> /home/user/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/unitree_go
+
+========== Unitree 消息定义 ==========
+RequestHeader header
+	RequestIdentity identity
+		int64  id
+		int64 api_id
+	RequestLease lease
+		int64 id
+	RequestPolicy policy
+		int32 priority
+		bool noreply
+string parameter
+uint8[] binary
+ResponseHeader header
+	RequestIdentity identity
+		int64  id
+		int64 api_id
+	ResponseStatus status
+		int32 code
+string data
+int8[] binary
+
+========== 同时检查传感器时间戳 ==========
+camera  header=1791881129.696169 receive=1791881129.739125 offset=0.042956s frame=camera_optical_frame
+cloud   header=1791881032.493984 receive=1791881129.740087 offset=97.246102s frame=base_link
+odom    header=1791881032.561339 receive=1791881129.740806 offset=97.179466s frame=odom
+
+camera - cloud = 97.202184s
+camera - odom  = 97.134829s
+cloud - odom   = -0.067355s

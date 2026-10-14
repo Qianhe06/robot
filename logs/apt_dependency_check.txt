@@ -1,0 +1,85 @@
+========== 已安装版本 ==========
+期望状态=未知(u)/安装(i)/删除(r)/清除(p)/保持(h)
+| 状态=未安装(n)/已安装(i)/仅存配置(c)/仅解压缩(U)/配置失败(F)/不完全安装(H)/触发器等待(W)/触发器未决(T)
+|/ 错误?=(无)/须重装(R) (状态，错误：大写=故障)
+||/ 名称              版本              体系结构     描述
++++-=================-=================-============-====================================
+ii  e2fsprogs         1.46.5-2ubuntu1.2 amd64        ext2/ext3/ext4 file system utilities
+ii  libcom-err2:amd64 1.46.5-2ubuntu1.2 amd64        common error description library
+ii  libcom-err2:i386  1.46.5-2ubuntu1.2 i386         common error description library
+
+========== 可用版本与软件源 ==========
+comerr-dev:
+  已安装：(无)
+  候选： 2.1-1.46.5-2ubuntu1.1
+  版本列表：
+     2.1-1.46.5-2ubuntu1.1 500
+        500 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages
+     2.1-1.46.5-2ubuntu1 500
+        500 http://cn.archive.ubuntu.com/ubuntu jammy/main amd64 Packages
+libcom-err2:
+  已安装：1.46.5-2ubuntu1.2
+  候选： 1.46.5-2ubuntu1.2
+  版本列表：
+ *** 1.46.5-2ubuntu1.2 100
+        100 /var/lib/dpkg/status
+     1.46.5-2ubuntu1.1 500
+        500 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages
+     1.46.5-2ubuntu1 500
+        500 http://cn.archive.ubuntu.com/ubuntu jammy/main amd64 Packages
+e2fsprogs:
+  已安装：1.46.5-2ubuntu1.2
+  候选： 1.46.5-2ubuntu1.2
+  版本列表：
+ *** 1.46.5-2ubuntu1.2 100
+        100 /var/lib/dpkg/status
+     1.46.5-2ubuntu1.1 500
+        500 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages
+     1.46.5-2ubuntu1 500
+        500 http://cn.archive.ubuntu.com/ubuntu jammy/main amd64 Packages
+libext2fs-dev:
+  已安装：(无)
+  候选： 1.46.5-2ubuntu1.1
+  版本列表：
+     1.46.5-2ubuntu1.1 500
+        500 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages
+     1.46.5-2ubuntu1 500
+        500 http://cn.archive.ubuntu.com/ubuntu jammy/main amd64 Packages
+
+========== 被锁定的软件包 ==========
+
+========== 依赖状态 ==========
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+
+========== 模拟安装匹配版本 ==========
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+e2fsprogs 已经是最新版 (1.46.5-2ubuntu1.2)。
+e2fsprogs 已设置为手动安装。
+libcom-err2 已经是最新版 (1.46.5-2ubuntu1.2)。
+libcom-err2 已设置为手动安装。
+有一些软件包无法被安装。如果您用的是 unstable 发行版，这也许是
+因为系统无法达到您要求的状态造成的。该版本中可能会有一些您需要的软件
+包尚未被创建或是它们已被从新到(Incoming)目录移出。
+下列信息可能会对解决问题有所帮助：
+
+下列软件包有未满足的依赖关系：
+ comerr-dev : 依赖: libcom-err2 (= 1.46.5-2ubuntu1.1) 但是 1.46.5-2ubuntu1.2 正要被安装
+ libext2fs-dev : 依赖: libext2fs2 (= 1.46.5-2ubuntu1.1) 但是 1.46.5-2ubuntu1.2 正要被安装
+E: 无法修正错误，因为您要求某些软件包保持现状，就是它们破坏了软件包间的依赖关系。
+
+========== 模拟安装 ROS2 组件 ==========
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+有一些软件包无法被安装。如果您用的是 unstable 发行版，这也许是
+因为系统无法达到您要求的状态造成的。该版本中可能会有一些您需要的软件
+包尚未被创建或是它们已被从新到(Incoming)目录移出。
+下列信息可能会对解决问题有所帮助：
+
+下列软件包有未满足的依赖关系：
+ comerr-dev : 依赖: libcom-err2 (= 1.46.5-2ubuntu1.1) 但是 1.46.5-2ubuntu1.2 正要被安装
+E: 无法修正错误，因为您要求某些软件包保持现状，就是它们破坏了软件包间的依赖关系。

@@ -1,0 +1,25 @@
+========== Odom ==========
+frame_id: odom
+child_frame_id: base_link
+position: x=5.3710, y=6.4067, z=0.0218
+orientation: x=-0.061575, y=0.019526, z=-0.911048, w=0.407210
+Traceback (most recent call last):
+  File "<stdin>", line 94, in <module>
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/__init__.py", line 208, in spin_once
+    executor.spin_once(timeout_sec=timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 812, in spin_once
+    self._spin_once_impl(timeout_sec)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 809, in _spin_once_impl
+    raise handler.exception()
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/task.py", line 309, in _execute_coroutine_step
+    result = coro.send(None)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 488, in handler
+    await call_coroutine(entity, arg)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 407, in _execute_subscription
+    await await_or_execute(sub.callback, msg)
+  File "/opt/ros/humble/local/lib/python3.10/dist-packages/rclpy/executors.py", line 110, in await_or_execute
+    return callback(*args)
+  File "<stdin>", line 56, in cloud_callback
+  File "/opt/ros/humble/lib/python3.10/site-packages/sensor_msgs_py/point_cloud2.py", line 158, in read_points_numpy
+    assert all(cloud.fields[0].datatype == field.datatype for field in cloud.fields[1:]), \
+AssertionError: All fields need to have the same datatype. Use `read_points()` otherwise.

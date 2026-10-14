@@ -1,0 +1,5 @@
+[INFO] [launch]: All log files can be found below /home/user/.ros/log/2026-10-13-17-07-40-252627-user-W40P-729011
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [time_sync_node-1]: process started with pid [729013]
+[time_sync_node-1] [INFO] [1791882460.785107891] [sensor_time_sync]: 传感器时间校正节点已启动
+[time_sync_node-1] [INFO] [1791882462.762289412] [sensor_time_sync]: 机器人时钟校正量=97.186s，相机接收偏差=0.119s

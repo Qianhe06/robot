@@ -1,0 +1,125 @@
+========== 发布者数量 ==========
+Type: sensor_msgs/msg/PointCloud2
+Publisher count: 1
+Subscription count: 1
+Type: sensor_msgs/msg/LaserScan
+Publisher count: 1
+Subscription count: 1
+
+========== /scan 频率 ==========
+average rate: 15.388
+	min: 0.062s max: 0.067s std dev: 0.00111s window: 17
+average rate: 15.382
+	min: 0.062s max: 0.067s std dev: 0.00097s window: 33
+average rate: 15.377
+	min: 0.062s max: 0.068s std dev: 0.00098s window: 49
+average rate: 15.379
+	min: 0.062s max: 0.068s std dev: 0.00091s window: 65
+
+========== odom -> base_footprint ==========
+[INFO] [1791882916.038013427] [tf2_echo]: Waiting for transform odom ->  base_footprint: Invalid frame ID "odom" passed to canTransform argument target_frame - frame does not exist
+At time 1791882917.24614811
+- Translation: [5.032, 6.298, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.913, -0.409]
+- Rotation: in RPY (radian) [0.000, -0.000, -2.299]
+- Rotation: in RPY (degree) [0.000, -0.000, -131.729]
+- Matrix:
+ -0.666  0.746  0.000  5.032
+ -0.746 -0.666  0.000  6.298
+  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  1.000
+At time 1791882918.22512913
+- Translation: [5.031, 6.298, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.913, -0.409]
+- Rotation: in RPY (radian) [0.000, -0.000, -2.299]
+- Rotation: in RPY (degree) [0.000, -0.000, -131.720]
+- Matrix:
+ -0.665  0.746  0.000  5.031
+ -0.746 -0.665  0.000  6.298
+  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  1.000
+At time 1791882919.24533272
+- Translation: [5.031, 6.298, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.913, -0.409]
+- Rotation: in RPY (radian) [0.000, -0.000, -2.299]
+- Rotation: in RPY (degree) [0.000, -0.000, -131.721]
+- Matrix:
+ -0.666  0.746  0.000  5.031
+ -0.746 -0.666  0.000  6.298
+  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  1.000
+[INFO] [1791882919.813272093] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+
+========== base_footprint -> base_link ==========
+[INFO] [1791882920.040949596] [tf2_echo]: Waiting for transform base_footprint ->  base_link: Invalid frame ID "base_footprint" passed to canTransform argument target_frame - frame does not exist
+At time 1791882921.28541088
+- Translation: [0.000, 0.000, 0.022]
+- Rotation: in Quaternion (xyzw) [-0.043, -0.048, -0.002, 0.998]
+- Rotation: in RPY (radian) [-0.086, -0.097, 0.000]
+- Rotation: in RPY (degree) [-4.942, -5.561, 0.000]
+- Matrix:
+  0.995  0.008 -0.097  0.000
+  0.000  0.996  0.086  0.000
+  0.097 -0.086  0.992  0.022
+  0.000  0.000  0.000  1.000
+At time 1791882922.30688763
+- Translation: [0.000, 0.000, 0.022]
+- Rotation: in Quaternion (xyzw) [-0.043, -0.049, -0.002, 0.998]
+- Rotation: in RPY (radian) [-0.086, -0.097, 0.000]
+- Rotation: in RPY (degree) [-4.936, -5.577, 0.000]
+- Matrix:
+  0.995  0.008 -0.097  0.000
+  0.000  0.996  0.086  0.000
+  0.097 -0.086  0.992  0.022
+  0.000  0.000  0.000  1.000
+At time 1791882923.28591633
+- Translation: [0.000, 0.000, 0.022]
+- Rotation: in Quaternion (xyzw) [-0.043, -0.048, -0.002, 0.998]
+- Rotation: in RPY (radian) [-0.086, -0.097, 0.000]
+- Rotation: in RPY (degree) [-4.912, -5.558, 0.000]
+- Matrix:
+  0.995  0.008 -0.097  0.000
+  0.000  0.996  0.086  0.000
+  0.097 -0.085  0.992  0.022
+  0.000  0.000  0.000  1.000
+[INFO] [1791882923.817332306] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+
+========== map -> odom ==========
+[INFO] [1791882924.061581349] [tf2_echo]: Waiting for transform map ->  odom: Invalid frame ID "map" passed to canTransform argument target_frame - frame does not exist
+At time 1791882925.124582958
+- Translation: [0.000, -0.000, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.000, 1.000]
+- Rotation: in RPY (radian) [0.000, -0.000, 0.000]
+- Rotation: in RPY (degree) [0.000, -0.000, 0.000]
+- Matrix:
+  1.000 -0.000  0.000  0.000
+  0.000  1.000  0.000 -0.000
+  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  1.000
+At time 1791882926.164627981
+- Translation: [0.000, -0.000, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.000, 1.000]
+- Rotation: in RPY (radian) [0.000, -0.000, 0.000]
+- Rotation: in RPY (degree) [0.000, -0.000, 0.000]
+- Matrix:
+  1.000 -0.000  0.000  0.000
+  0.000  1.000  0.000 -0.000
+  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  1.000
+At time 1791882927.139620733
+- Translation: [0.000, -0.000, 0.000]
+- Rotation: in Quaternion (xyzw) [0.000, 0.000, 0.000, 1.000]
+- Rotation: in RPY (radian) [0.000, -0.000, 0.000]
+- Rotation: in RPY (degree) [0.000, -0.000, 0.000]
+- Matrix:
+  1.000 -0.000  0.000  0.000
+  0.000  1.000  0.000 -0.000
+  0.000  0.000  1.000  0.000
+  0.000  0.000  0.000  1.000
+[INFO] [1791882927.821300100] [rclcpp]: signal_handler(SIGINT/SIGTERM)
+
+========== 停止后残留检查 ==========
+/odom_tf_broadcaster
+/pointcloud_to_laserscan
+/sensor_time_sync
+/slam_toolbox

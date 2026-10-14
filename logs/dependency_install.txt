@@ -1,0 +1,233 @@
+========== 当前环境 ==========
+Conda：robot
+Python：/home/user/miniconda3/envs/robot/bin/python
+
+========== 将 Open3D 安装到 robot ==========
+Collecting open3d==0.20.0
+  Using cached open3d-0.20.0-cp310-cp310-manylinux_2_35_x86_64.whl.metadata (4.7 kB)
+Requirement already satisfied: numpy>=1.18.0 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from open3d==0.20.0) (1.26.4)
+Collecting dash>=2.6.0 (from open3d==0.20.0)
+  Using cached dash-4.4.1-py3-none-any.whl.metadata (11 kB)
+Collecting werkzeug>=3.0.0 (from open3d==0.20.0)
+  Downloading werkzeug-3.1.9-py3-none-any.whl.metadata (4.1 kB)
+Collecting flask>=3.0.0 (from open3d==0.20.0)
+  Using cached flask-3.1.3-py3-none-any.whl.metadata (3.2 kB)
+Collecting nbformat>=5.7.0 (from open3d==0.20.0)
+  Using cached nbformat-5.11.1-py3-none-any.whl.metadata (3.7 kB)
+Collecting configargparse (from open3d==0.20.0)
+  Downloading configargparse-1.8.0-py3-none-any.whl.metadata (23 kB)
+Collecting ipywidgets>=8.0.4 (from open3d==0.20.0)
+  Using cached ipywidgets-8.1.9-py3-none-any.whl.metadata (2.4 kB)
+Collecting plotly>=5.0.0 (from dash>=2.6.0->open3d==0.20.0)
+  Using cached plotly-7.1.0-py3-none-any.whl.metadata (8.8 kB)
+Requirement already satisfied: importlib-metadata in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from dash>=2.6.0->open3d==0.20.0) (9.0.1)
+Collecting typing_extensions>=4.1.1 (from dash>=2.6.0->open3d==0.20.0)
+  Using cached typing_extensions-4.16.0-py3-none-any.whl.metadata (3.3 kB)
+Requirement already satisfied: requests in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from dash>=2.6.0->open3d==0.20.0) (2.34.2)
+Collecting retrying (from dash>=2.6.0->open3d==0.20.0)
+  Using cached retrying-1.4.2-py3-none-any.whl.metadata (5.5 kB)
+Collecting nest-asyncio (from dash>=2.6.0->open3d==0.20.0)
+  Using cached nest_asyncio-1.6.0-py3-none-any.whl.metadata (2.8 kB)
+Requirement already satisfied: setuptools in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from dash>=2.6.0->open3d==0.20.0) (84.0.0)
+Collecting janus>=1.0.0 (from dash>=2.6.0->open3d==0.20.0)
+  Using cached janus-2.0.0-py3-none-any.whl.metadata (5.3 kB)
+Collecting pydantic>=2.10 (from dash>=2.6.0->open3d==0.20.0)
+  Downloading pydantic-2.14.1-py3-none-any.whl.metadata (133 kB)
+Collecting comm (from dash>=2.6.0->open3d==0.20.0)
+  Using cached comm-0.2.3-py3-none-any.whl.metadata (3.7 kB)
+Collecting blinker>=1.9.0 (from flask>=3.0.0->open3d==0.20.0)
+  Using cached blinker-1.9.0-py3-none-any.whl.metadata (1.6 kB)
+Collecting click>=8.1.3 (from flask>=3.0.0->open3d==0.20.0)
+  Using cached click-8.5.0-py3-none-any.whl.metadata (2.6 kB)
+Collecting itsdangerous>=2.2.0 (from flask>=3.0.0->open3d==0.20.0)
+  Using cached itsdangerous-2.2.0-py3-none-any.whl.metadata (1.9 kB)
+Collecting jinja2>=3.1.2 (from flask>=3.0.0->open3d==0.20.0)
+  Using cached jinja2-3.1.6-py3-none-any.whl.metadata (2.9 kB)
+Collecting markupsafe>=2.1.1 (from flask>=3.0.0->open3d==0.20.0)
+  Downloading markupsafe-3.0.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+Collecting ipython>=6.1.0 (from ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached ipython-8.39.0-py3-none-any.whl.metadata (5.1 kB)
+Collecting traitlets>=4.3.1 (from ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached traitlets-5.16.1-py3-none-any.whl.metadata (10 kB)
+Collecting widgetsnbextension~=4.0.16 (from ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached widgetsnbextension-4.0.16-py3-none-any.whl.metadata (1.6 kB)
+Collecting jupyterlab_widgets~=3.0.17 (from ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached jupyterlab_widgets-3.0.17-py3-none-any.whl.metadata (20 kB)
+Requirement already satisfied: decorator in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0) (5.3.1)
+Collecting exceptiongroup (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached exceptiongroup-1.3.1-py3-none-any.whl.metadata (6.7 kB)
+Collecting jedi>=0.16 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Downloading jedi-0.20.1-py2.py3-none-any.whl.metadata (23 kB)
+Collecting matplotlib-inline (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached matplotlib_inline-0.2.2-py3-none-any.whl.metadata (2.4 kB)
+Requirement already satisfied: pexpect>4.3 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0) (4.9.0)
+Collecting prompt_toolkit<3.1.0,>=3.0.41 (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached prompt_toolkit-3.0.53-py3-none-any.whl.metadata (6.4 kB)
+Requirement already satisfied: pygments>=2.4.0 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0) (2.21.0)
+Collecting stack_data (from ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached stack_data-0.6.3-py3-none-any.whl.metadata (18 kB)
+Collecting wcwidth>=0.1.4 (from prompt_toolkit<3.1.0,>=3.0.41->ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl.metadata (23 kB)
+Collecting parso<0.9.0,>=0.8.7 (from jedi>=0.16->ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached parso-0.8.7-py2.py3-none-any.whl.metadata (8.2 kB)
+Collecting fastjsonschema>=2.15 (from nbformat>=5.7.0->open3d==0.20.0)
+  Using cached fastjsonschema-2.22.2-py3-none-any.whl.metadata (2.1 kB)
+Collecting jsonschema>=2.6 (from nbformat>=5.7.0->open3d==0.20.0)
+  Using cached jsonschema-4.26.0-py3-none-any.whl.metadata (7.6 kB)
+Collecting jupyter-core!=5.0.*,>=4.12 (from nbformat>=5.7.0->open3d==0.20.0)
+  Using cached jupyter_core-5.9.1-py3-none-any.whl.metadata (1.5 kB)
+Collecting attrs>=22.2.0 (from jsonschema>=2.6->nbformat>=5.7.0->open3d==0.20.0)
+  Using cached attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
+Collecting jsonschema-specifications>=2023.03.6 (from jsonschema>=2.6->nbformat>=5.7.0->open3d==0.20.0)
+  Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl.metadata (2.9 kB)
+Collecting referencing>=0.28.4 (from jsonschema>=2.6->nbformat>=5.7.0->open3d==0.20.0)
+  Using cached referencing-0.37.0-py3-none-any.whl.metadata (2.8 kB)
+Collecting rpds-py>=0.25.0 (from jsonschema>=2.6->nbformat>=5.7.0->open3d==0.20.0)
+  Using cached rpds_py-0.30.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.1 kB)
+Collecting platformdirs>=2.5 (from jupyter-core!=5.0.*,>=4.12->nbformat>=5.7.0->open3d==0.20.0)
+  Downloading platformdirs-4.12.4-py3-none-any.whl.metadata (5.5 kB)
+Requirement already satisfied: ptyprocess>=0.5 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from pexpect>4.3->ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0) (0.7.0)
+Collecting narwhals>=1.15.1 (from plotly>=5.0.0->dash>=2.6.0->open3d==0.20.0)
+  Downloading narwhals-2.27.1-py3-none-any.whl.metadata (15 kB)
+Requirement already satisfied: packaging in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from plotly>=5.0.0->dash>=2.6.0->open3d==0.20.0) (26.3)
+Collecting annotated-types>=0.6.0 (from pydantic>=2.10->dash>=2.6.0->open3d==0.20.0)
+  Using cached annotated_types-0.8.0-py3-none-any.whl.metadata (15 kB)
+Collecting pydantic-core==2.50.1 (from pydantic>=2.10->dash>=2.6.0->open3d==0.20.0)
+  Downloading pydantic_core-2.50.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)
+Collecting typing-inspection>=0.4.4 (from pydantic>=2.10->dash>=2.6.0->open3d==0.20.0)
+  Using cached typing_inspection-0.4.4-py3-none-any.whl.metadata (2.6 kB)
+Requirement already satisfied: zipp>=3.20 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from importlib-metadata->dash>=2.6.0->open3d==0.20.0) (4.1.1)
+Requirement already satisfied: charset_normalizer<4,>=2 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from requests->dash>=2.6.0->open3d==0.20.0) (3.5.2)
+Requirement already satisfied: idna<4,>=2.5 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from requests->dash>=2.6.0->open3d==0.20.0) (3.20)
+Requirement already satisfied: urllib3<3,>=1.26 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from requests->dash>=2.6.0->open3d==0.20.0) (2.8.0)
+Requirement already satisfied: certifi>=2023.5.7 in /home/user/miniconda3/envs/robot/lib/python3.10/site-packages (from requests->dash>=2.6.0->open3d==0.20.0) (2026.7.22)
+Collecting executing>=1.2.0 (from stack_data->ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Downloading executing-2.3.0-py3-none-any.whl.metadata (9.1 kB)
+Collecting asttokens>=2.1.0 (from stack_data->ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached asttokens-3.0.2-py3-none-any.whl.metadata (5.7 kB)
+Collecting pure-eval (from stack_data->ipython>=6.1.0->ipywidgets>=8.0.4->open3d==0.20.0)
+  Using cached pure_eval-0.2.4-py3-none-any.whl.metadata (6.4 kB)
+Using cached open3d-0.20.0-cp310-cp310-manylinux_2_35_x86_64.whl (400.8 MB)
+Using cached dash-4.4.1-py3-none-any.whl (8.9 MB)
+Using cached flask-3.1.3-py3-none-any.whl (103 kB)
+Downloading werkzeug-3.1.9-py3-none-any.whl (228 kB)
+Using cached blinker-1.9.0-py3-none-any.whl (8.5 kB)
+Using cached click-8.5.0-py3-none-any.whl (125 kB)
+Using cached ipywidgets-8.1.9-py3-none-any.whl (140 kB)
+Using cached jupyterlab_widgets-3.0.17-py3-none-any.whl (217 kB)
+Using cached widgetsnbextension-4.0.16-py3-none-any.whl (2.2 MB)
+Using cached comm-0.2.3-py3-none-any.whl (7.3 kB)
+Using cached ipython-8.39.0-py3-none-any.whl (831 kB)
+Using cached prompt_toolkit-3.0.53-py3-none-any.whl (392 kB)
+Using cached itsdangerous-2.2.0-py3-none-any.whl (16 kB)
+Using cached janus-2.0.0-py3-none-any.whl (12 kB)
+Downloading jedi-0.20.1-py2.py3-none-any.whl (4.9 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 4.9/4.9 MB 4.5 MB/s  0:00:01
+Using cached parso-0.8.7-py2.py3-none-any.whl (107 kB)
+Using cached jinja2-3.1.6-py3-none-any.whl (134 kB)
+Downloading markupsafe-3.0.4-cp310-cp310-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (20 kB)
+Using cached nbformat-5.11.1-py3-none-any.whl (79 kB)
+Using cached fastjsonschema-2.22.2-py3-none-any.whl (27 kB)
+Using cached jsonschema-4.26.0-py3-none-any.whl (90 kB)
+Using cached attrs-26.1.0-py3-none-any.whl (67 kB)
+Using cached jsonschema_specifications-2025.9.1-py3-none-any.whl (18 kB)
+Using cached jupyter_core-5.9.1-py3-none-any.whl (29 kB)
+Downloading platformdirs-4.12.4-py3-none-any.whl (32 kB)
+Using cached plotly-7.1.0-py3-none-any.whl (9.7 MB)
+Downloading narwhals-2.27.1-py3-none-any.whl (483 kB)
+Downloading pydantic-2.14.1-py3-none-any.whl (488 kB)
+Downloading pydantic_core-2.50.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.2 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.2/2.2 MB 2.6 MB/s  0:00:00
+Using cached annotated_types-0.8.0-py3-none-any.whl (13 kB)
+Using cached referencing-0.37.0-py3-none-any.whl (26 kB)
+Using cached rpds_py-0.30.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (390 kB)
+Using cached traitlets-5.16.1-py3-none-any.whl (86 kB)
+Using cached typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+Using cached typing_inspection-0.4.4-py3-none-any.whl (14 kB)
+Downloading wcwidth-0.9.2-cp310-abi3-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (769 kB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 769.8/769.8 kB 2.2 MB/s  0:00:00
+Downloading configargparse-1.8.0-py3-none-any.whl (34 kB)
+Using cached exceptiongroup-1.3.1-py3-none-any.whl (16 kB)
+Using cached matplotlib_inline-0.2.2-py3-none-any.whl (9.5 kB)
+Using cached nest_asyncio-1.6.0-py3-none-any.whl (5.2 kB)
+Using cached retrying-1.4.2-py3-none-any.whl (10 kB)
+Using cached stack_data-0.6.3-py3-none-any.whl (24 kB)
+Using cached asttokens-3.0.2-py3-none-any.whl (28 kB)
+Downloading executing-2.3.0-py3-none-any.whl (29 kB)
+Using cached pure_eval-0.2.4-py3-none-any.whl (11 kB)
+Installing collected packages: pure-eval, widgetsnbextension, wcwidth, typing_extensions, traitlets, rpds-py, retrying, platformdirs, parso, nest-asyncio, narwhals, markupsafe, jupyterlab_widgets, janus, itsdangerous, fastjsonschema, executing, configargparse, comm, click, blinker, attrs, asttokens, annotated-types, werkzeug, typing-inspection, stack_data, referencing, pydantic-core, prompt_toolkit, plotly, matplotlib-inline, jupyter-core, jinja2, jedi, exceptiongroup, pydantic, jsonschema-specifications, ipython, flask, jsonschema, ipywidgets, dash, nbformat, open3d
+
+Successfully installed annotated-types-0.8.0 asttokens-3.0.2 attrs-26.1.0 blinker-1.9.0 click-8.5.0 comm-0.2.3 configargparse-1.8.0 dash-4.4.1 exceptiongroup-1.3.1 executing-2.3.0 fastjsonschema-2.22.2 flask-3.1.3 ipython-8.39.0 ipywidgets-8.1.9 itsdangerous-2.2.0 janus-2.0.0 jedi-0.20.1 jinja2-3.1.6 jsonschema-4.26.0 jsonschema-specifications-2025.9.1 jupyter-core-5.9.1 jupyterlab_widgets-3.0.17 markupsafe-3.0.4 matplotlib-inline-0.2.2 narwhals-2.27.1 nbformat-5.11.1 nest-asyncio-1.6.0 open3d-0.20.0 parso-0.8.7 platformdirs-4.12.4 plotly-7.1.0 prompt_toolkit-3.0.53 pure-eval-0.2.4 pydantic-2.14.1 pydantic-core-2.50.1 referencing-0.37.0 retrying-1.4.2 rpds-py-0.30.0 stack_data-0.6.3 traitlets-5.16.1 typing-inspection-0.4.4 typing_extensions-4.16.0 wcwidth-0.9.2 werkzeug-3.1.9 widgetsnbextension-4.0.16
+
+Open3D 路径：
+/home/user/miniconda3/envs/robot/lib/python3.10/site-packages/open3d/__init__.py
+
+========== 安装 ROS2 系统组件 ==========
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+获取:1 file:/var/cuda-repo-ubuntu2204-12-4-local  InRelease [1,572 B]
+获取:2 file:/var/cudnn-local-repo-ubuntu2204-9.6.0  InRelease [1,572 B]
+获取:1 file:/var/cuda-repo-ubuntu2204-12-4-local  InRelease [1,572 B]
+获取:2 file:/var/cudnn-local-repo-ubuntu2204-9.6.0  InRelease [1,572 B]
+忽略:3 https://download.docker.com/linux/ubuntu jammy InRelease
+获取:5 https://dl.google.com/linux/chrome-stable/deb stable InRelease [2,548 B]
+获取:6 http://security.ubuntu.com/ubuntu jammy-security InRelease [129 kB]
+获取:7 https://dl.google.com/linux/chrome-stable/deb stable/main amd64 Packages [1,408 B]
+获取:8 http://mirrors.aliyun.com/docker-ce/linux/ubuntu jammy InRelease [48.5 kB]
+获取:9 http://packages.ros.org/ros2/ubuntu jammy InRelease [4,682 B]
+获取:10 http://mirrors.aliyun.com/docker-ce/linux/ubuntu jammy/stable amd64 Packages [89.4 kB]
+命中:4 http://mirrors.tuna.tsinghua.edu.cn/ubuntu jammy InRelease
+获取:11 http://packages.ros.org/ros2/ubuntu jammy/main Sources [1,900 kB]
+命中:12 https://deb.nodesource.com/node_20.x nodistro InRelease
+忽略:3 https://download.docker.com/linux/ubuntu jammy InRelease
+获取:13 http://security.ubuntu.com/ubuntu jammy-security/main i386 Packages [926 kB]
+获取:14 http://security.ubuntu.com/ubuntu jammy-security/main amd64 Packages [3,641 kB]
+获取:15 http://security.ubuntu.com/ubuntu jammy-security/main Translation-en [509 kB]
+获取:16 http://security.ubuntu.com/ubuntu jammy-security/main amd64 DEP-11 Metadata [74.4 kB]
+获取:17 http://security.ubuntu.com/ubuntu jammy-security/restricted amd64 Packages [6,505 kB]
+忽略:3 https://download.docker.com/linux/ubuntu jammy InRelease
+获取:18 http://security.ubuntu.com/ubuntu jammy-security/restricted i386 Packages [52.9 kB]
+获取:19 http://security.ubuntu.com/ubuntu jammy-security/restricted Translation-en [1,250 kB]
+获取:20 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 Packages [1,053 kB]
+获取:21 http://security.ubuntu.com/ubuntu jammy-security/universe i386 Packages [712 kB]
+获取:22 http://security.ubuntu.com/ubuntu jammy-security/universe amd64 DEP-11 Metadata [127 kB]
+获取:23 http://security.ubuntu.com/ubuntu jammy-security/multiverse i386 Packages [12.3 kB]
+获取:24 http://security.ubuntu.com/ubuntu jammy-security/multiverse amd64 Packages [79.6 kB]
+获取:25 http://security.ubuntu.com/ubuntu jammy-security/multiverse Translation-en [13.7 kB]
+错误:3 https://download.docker.com/linux/ubuntu jammy InRelease
+  Could not handshake: Error in the pull function. [IP: 18.65.14.67 443]
+获取:26 http://packages.ros.org/ros2/ubuntu jammy/main amd64 Packages [1,867 kB]
+已下载 19.0 MB，耗时 17秒 (1,121 kB/s)
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+有 188 个软件包可以升级。请执行 ‘apt list --upgradable’ 来查看它们。
+W: http://mirrors.aliyun.com/docker-ce/linux/ubuntu/dists/jammy/InRelease: 密钥存储在过时的 trusted.gpg 密钥环中（/etc/apt/trusted.gpg），请参见 apt-key(8) 的 DEPRECATION 一节以了解详情。
+W: 无法下载 https://download.docker.com/linux/ubuntu/dists/jammy/InRelease  Could not handshake: Error in the pull function. [IP: 18.65.14.67 443]
+W: 部分索引文件下载失败。如果忽略它们，那将转而使用旧的索引文件。
+
+WARNING: apt does not have a stable CLI interface. Use with caution in scripts.
+
+正在读取软件包列表...
+正在分析软件包的依赖关系树...
+正在读取状态信息...
+python3-colcon-common-extensions 已经是最新版 (0.3.0-100)。
+ros-humble-message-filters 已经是最新版 (4.3.20-1jammy.20260907.223809)。
+ros-humble-message-filters 已设置为手动安装。
+有一些软件包无法被安装。如果您用的是 unstable 发行版，这也许是
+因为系统无法达到您要求的状态造成的。该版本中可能会有一些您需要的软件
+包尚未被创建或是它们已被从新到(Incoming)目录移出。
+下列信息可能会对解决问题有所帮助：
+
+下列软件包有未满足的依赖关系：
+ comerr-dev : 依赖: libcom-err2 (= 1.46.5-2ubuntu1.1) 但是 1.46.5-2ubuntu1.2 正要被安装
+E: 无法修正错误，因为您要求某些软件包保持现状，就是它们破坏了软件包间的依赖关系。
+
+========== 验证 ==========
+[正常] unitree_api
+[正常] unitree_go
+[缺失] nav2_bringup
+[缺失] slam_toolbox
+[缺失] pointcloud_to_laserscan
+[缺失] robot_localization
