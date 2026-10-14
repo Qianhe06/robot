@@ -1,0 +1,12 @@
+# ROS 2 / colcon generated files
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Python generated files
+__pycache__/
+*.pyc
+
+# Local secrets
+.env
+.env.*
