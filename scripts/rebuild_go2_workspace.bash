@@ -6,6 +6,10 @@ project_root="$(
 )"
 workspace="${project_root}/ros2_ws"
 
+unset CONDA_PREFIX
+unset CONDA_DEFAULT_ENV
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 unset AMENT_PREFIX_PATH
 unset CMAKE_PREFIX_PATH
 unset COLCON_PREFIX_PATH
@@ -14,6 +18,15 @@ unset PYTHONPATH
 source "${project_root}/activate_go2.bash"
 
 echo "检查 Unitree ROS 2 Python 消息……"
+if ! /usr/bin/python3 -c "from unitree_api.msg import Request"; then
+  echo "项目内 Unitree 安装不完整，开始重建……"
+  bash "${project_root}/scripts/rebuild_unitree_ros2.bash"
+  unset AMENT_PREFIX_PATH
+  unset CMAKE_PREFIX_PATH
+  unset COLCON_PREFIX_PATH
+  unset PYTHONPATH
+  source "${project_root}/activate_go2.bash"
+fi
 /usr/bin/python3 -c \
   "from unitree_api.msg import Request; print('unitree_api 正常')"
 
