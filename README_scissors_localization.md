@@ -17,9 +17,20 @@
 
 ```bash
 conda deactivate 2>/dev/null || true
-cd ~/桌面/robot/detection/unitree_sdk2-2.0.2
+PROJECT="$HOME/桌面/robot/detection"
+cd "$PROJECT/unitree_sdk2-2.0.2"
+
+ROBOT_NIC="$(ip -o -4 address show up | awk '
+  $4 ~ /^192[.]168[.]123[.]/ {print $2; exit}'
+)"
+test -n "$ROBOT_NIC" || {
+  echo "无法确定 Go2 网卡；请运行 ip -br address" >&2
+  return 1 2>/dev/null || exit 1
+}
+
+echo "Go2 network interface: $ROBOT_NIC"
 export LD_LIBRARY_PATH="$PWD/thirdparty/lib/x86_64:/usr/lib/x86_64-linux-gnu"
-./build/bin/go2_camera_capture eno1
+./build/bin/go2_camera_capture "$ROBOT_NIC"
 ```
 
 它应持续更新 `/tmp/go2_camera/latest.jpg`。
@@ -28,25 +39,43 @@ export LD_LIBRARY_PATH="$PWD/thirdparty/lib/x86_64:/usr/lib/x86_64-linux-gnu"
 
 ```bash
 conda deactivate 2>/dev/null || true
+PROJECT="$HOME/桌面/robot/detection"
 source /opt/ros/humble/setup.bash
-source ~/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/setup.bash
+source "$PROJECT/unitree_ros2/cyclonedds_ws/install/setup.bash"
+
+ROBOT_NIC="$(ip -o -4 address show up | awk '
+  $4 ~ /^192[.]168[.]123[.]/ {print $2; exit}'
+)"
+test -n "$ROBOT_NIC" || {
+  echo "无法确定 Go2 网卡；请运行 ip -br address" >&2
+  return 1 2>/dev/null || exit 1
+}
 
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-export CYCLONEDDS_URI='<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="eno1" priority="default" multicast="default" /></Interfaces></General></Domain></CycloneDDS>'
+export CYCLONEDDS_URI="<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"$ROBOT_NIC\" priority=\"default\" multicast=\"default\" /></Interfaces></General></Domain></CycloneDDS>"
 
-python3 ~/桌面/robot/go2_camera_info_publisher.py &
-python3 ~/桌面/robot/go2_camera_ros2_bridge.py
+python3 "$PROJECT/go2_camera_info_publisher.py" &
+python3 "$PROJECT/go2_camera_ros2_bridge.py"
 ```
 
 ### 终端 3：检查所有输入话题
 
 ```bash
 conda deactivate 2>/dev/null || true
+PROJECT="$HOME/桌面/robot/detection"
 source /opt/ros/humble/setup.bash
-source ~/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/setup.bash
+source "$PROJECT/unitree_ros2/cyclonedds_ws/install/setup.bash"
+
+ROBOT_NIC="$(ip -o -4 address show up | awk '
+  $4 ~ /^192[.]168[.]123[.]/ {print $2; exit}'
+)"
+test -n "$ROBOT_NIC" || {
+  echo "无法确定 Go2 网卡；请运行 ip -br address" >&2
+  return 1 2>/dev/null || exit 1
+}
 
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-export CYCLONEDDS_URI='<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="eno1" priority="default" multicast="default" /></Interfaces></General></Domain></CycloneDDS>'
+export CYCLONEDDS_URI="<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"$ROBOT_NIC\" priority=\"default\" multicast=\"default\" /></Interfaces></General></Domain></CycloneDDS>"
 
 timeout 5 ros2 topic hz /camera/image_raw
 timeout 5 ros2 topic hz /camera/camera_info
@@ -61,14 +90,23 @@ timeout 5 ros2 topic hz /utlidar/robot_odom
 
 ```bash
 conda activate robot
+PROJECT="$HOME/桌面/robot/detection"
 source /opt/ros/humble/setup.bash
-source ~/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/setup.bash
+source "$PROJECT/unitree_ros2/cyclonedds_ws/install/setup.bash"
 
-export PYTHONPATH="/opt/ros/humble/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:$HOME/桌面/robot/detection/unitree_ros2/cyclonedds_ws/install/unitree_go/local/lib/python3.10/dist-packages:$PYTHONPATH"
+ROBOT_NIC="$(ip -o -4 address show up | awk '
+  $4 ~ /^192[.]168[.]123[.]/ {print $2; exit}'
+)"
+test -n "$ROBOT_NIC" || {
+  echo "无法确定 Go2 网卡；请运行 ip -br address" >&2
+  return 1 2>/dev/null || exit 1
+}
+
+export PYTHONPATH="/opt/ros/humble/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:$PROJECT/unitree_ros2/cyclonedds_ws/install/unitree_go/local/lib/python3.10/dist-packages:$PYTHONPATH"
 export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
-export CYCLONEDDS_URI='<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="eno1" priority="default" multicast="default" /></Interfaces></General></Domain></CycloneDDS>'
+export CYCLONEDDS_URI="<CycloneDDS><Domain><General><Interfaces><NetworkInterface name=\"$ROBOT_NIC\" priority=\"default\" multicast=\"default\" /></Interfaces></General></Domain></CycloneDDS>"
 
-cd ~/桌面/robot/detection
+cd "$PROJECT"
 python go2_scissors_rgb_lidar.py
 ```
 
