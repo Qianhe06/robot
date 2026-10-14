@@ -37,6 +37,10 @@ setup(
             "go2_scissors_search.time_sync_node:main",
             "odom_tf_node = "
             "go2_scissors_search.odom_tf_node:main",
+            "motion_adapter_node = "
+            "go2_scissors_search.motion_adapter_node:main",
+            "mission_manager_node = "
+            "go2_scissors_search.mission_manager_node:main",
         ],
     },
 )

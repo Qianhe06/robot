@@ -13,14 +13,19 @@ import open3d as o3d
 import rclpy
 import torch
 from cv_bridge import CvBridge
-from geometry_msgs.msg import PointStamped
+from geometry_msgs.msg import PointStamped, PoseWithCovarianceStamped
+from go2_scissors_search.localization_core import TemporalTargetConfirmer
+from go2_scissors_search.wall_target_estimator import estimate_wall_target
 from nav_msgs.msg import Odometry
+from rclpy.duration import Duration
 from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from rclpy.qos import qos_profile_sensor_data
+from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
 from sensor_msgs_py import point_cloud2
-from std_msgs.msg import Header
+from std_msgs.msg import Bool, Header
+from tf2_ros import Buffer, TransformException, TransformListener
 from ultralytics import YOLO
 from visualization_msgs.msg import Marker
 
@@ -28,8 +33,8 @@ from visualization_msgs.msg import Marker
 # ROS topics
 IMAGE_TOPIC = "/camera/image_raw"
 INFO_TOPIC = "/camera/camera_info"
-CLOUD_TOPIC = "/utlidar/cloud_base"
-ODOM_TOPIC = "/utlidar/robot_odom"
+CLOUD_TOPIC = "/sensors/cloud_base_synced"
+ODOM_TOPIC = "/sensors/odom_synced"
 
 # Detector
 MODEL_NAME = "yolo26x.pt"
@@ -74,9 +79,12 @@ DETECTION_HOLD_SEC = 0.50
 # original image resolution. LiDAR projection uses the resulting new K matrix.
 UNDISTORT_ALPHA = 0.0
 
-# Maintain a rolling window of the latest ten LiDAR messages.
-ACCUMULATION_FRAMES = 10
-SNAPSHOT_PLY_PATH = PROJECT_DIR / "scissors_10frame_snapshot.ply"
+# Match each camera frame to a single corrected LiDAR and odometry message.
+SYNC_SLOP_SEC = 0.12
+SENSOR_BUFFER_SIZE = 60
+MIN_WALL_SUPPORT = 20
+MAX_WALL_RMS = 0.05
+SNAPSHOT_PLY_PATH = PROJECT_DIR / "scissors_single_frame_snapshot.ply"
 RGB_SNAPSHOT_PATH = PROJECT_DIR / "scissors_rgb_detection.png"
 
 # Visualization. RGB projection remains available as a ROS debug topic, while
@@ -112,6 +120,8 @@ class ScissorsRGBLidar(Node):
     def __init__(self):
         super().__init__("go2_scissors_rgb_lidar")
         self.bridge = CvBridge()
+        self.tf_buffer = Buffer()
+        self.tf_listener = TransformListener(self.tf_buffer, self)
         self.model = YOLO(MODEL_PATH)
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is not available")
@@ -129,11 +139,18 @@ class ScissorsRGBLidar(Node):
         self.undistort_map1 = None
         self.undistort_map2 = None
         self.undistort_image_size = None
-        self.cloud_frames = deque(maxlen=ACCUMULATION_FRAMES)
-        self.collection_complete = False
+        self.cloud_buffer = deque(maxlen=SENSOR_BUFFER_SIZE)
+        self.odom_buffer = deque(maxlen=SENSOR_BUFFER_SIZE * 2)
         self.latest_cloud = None
         self.latest_cloud_header = None
         self.latest_odom = None
+        self.target_confirmer = TemporalTargetConfirmer(
+            window_size=5,
+            required_detections=3,
+            min_support_points=MIN_WALL_SUPPORT,
+            max_plane_rms=MAX_WALL_RMS,
+            max_position_spread=0.25,
+        )
         self.last_wait_log_time = 0.0
         self.last_position_log_time = 0.0
         self.cached_detections = []
@@ -154,6 +171,12 @@ class ScissorsRGBLidar(Node):
         self.create_subscription(
             Image, IMAGE_TOPIC, self.image_callback, qos_profile_sensor_data
         )
+        self.create_subscription(
+            Bool,
+            "/scissors/confirmation_reset",
+            self.confirmation_reset_callback,
+            10,
+        )
 
         self.cloud_pub = self.create_publisher(
             PointCloud2, "/scissors/colored_cloud", 10
@@ -165,6 +188,16 @@ class ScissorsRGBLidar(Node):
             PointStamped, "/scissors/position_odom", 10
         )
         self.marker_pub = self.create_publisher(Marker, "/scissors/marker", 10)
+        self.target_pose_pub = self.create_publisher(
+            PoseWithCovarianceStamped,
+            "/scissors/target_pose",
+            10,
+        )
+        self.candidate_pub = self.create_publisher(
+            Bool,
+            "/scissors/candidate",
+            10,
+        )
         self.overlay_pub = self.create_publisher(
             Image, "/scissors/detection_image", 10
         )
@@ -181,7 +214,7 @@ class ScissorsRGBLidar(Node):
             f"GPU={DEVICE} ({torch.cuda.get_device_name(DEVICE)})"
         )
         self.get_logger().info(
-            f"Waiting for {ACCUMULATION_FRAMES} LiDAR frames; then using a rolling window"
+            "Using timestamp-matched single LiDAR frames to avoid motion blur"
         )
 
     def initialize_open3d(self):
@@ -364,24 +397,28 @@ class ScissorsRGBLidar(Node):
         )
         if points.size == 0:
             return
-        self.cloud_frames.append(points.reshape(-1, 3))
-
-        if len(self.cloud_frames) < ACCUMULATION_FRAMES:
-            self.get_logger().info(
-                f"LiDAR accumulation: {len(self.cloud_frames)}/{ACCUMULATION_FRAMES}"
-            )
-            return
-
-        self.latest_cloud = np.concatenate(list(self.cloud_frames), axis=0)
+        self.latest_cloud = points.reshape(-1, 3)
         self.latest_cloud_header = msg.header
-        if not self.collection_complete:
-            self.collection_complete = True
-            self.get_logger().info(
-                f"Rolling LiDAR window ready: {len(self.latest_cloud)} points"
-            )
+        timestamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        self.cloud_buffer.append((timestamp, self.latest_cloud, msg.header))
 
     def odom_callback(self, msg):
         self.latest_odom = msg
+        timestamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        self.odom_buffer.append((timestamp, msg))
+
+    def confirmation_reset_callback(self, message):
+        if message.data:
+            self.target_confirmer.reset()
+
+    @staticmethod
+    def closest_message(buffer, timestamp):
+        if not buffer:
+            return None
+        closest = min(buffer, key=lambda item: abs(item[0] - timestamp))
+        if abs(closest[0] - timestamp) > SYNC_SLOP_SEC:
+            return None
+        return closest
 
     @staticmethod
     def choose_depth_cluster(candidate_indices, points_camera, projected, bbox):
@@ -454,31 +491,67 @@ class ScissorsRGBLidar(Node):
         rows = np.column_stack((points_body.astype(np.float32), colors))
         self.cloud_pub.publish(point_cloud2.create_cloud(cloud_header, fields, rows))
 
-    def publish_positions(self, position_base, stamp, confidence, point_count):
+    @staticmethod
+    def base_to_odom(position_base, odom):
+        pose = odom.pose.pose
+        q = pose.orientation
+        rotation = quaternion_rotation_matrix(q.x, q.y, q.z, q.w)
+        translation = np.array(
+            [pose.position.x, pose.position.y, pose.position.z],
+            dtype=np.float64,
+        )
+        return rotation @ position_base + translation, rotation
+
+    def odom_to_map(self, position_odom, vector_odom, stamp, odom_frame):
+        try:
+            transform = self.tf_buffer.lookup_transform(
+                "map",
+                odom_frame,
+                Time.from_msg(stamp),
+                timeout=Duration(seconds=0.05),
+            )
+        except TransformException as error:
+            self.get_logger().debug(f"map transform unavailable: {error}")
+            return None
+        translation = transform.transform.translation
+        quaternion = transform.transform.rotation
+        rotation = quaternion_rotation_matrix(
+            quaternion.x,
+            quaternion.y,
+            quaternion.z,
+            quaternion.w,
+        )
+        offset = np.array(
+            [translation.x, translation.y, translation.z],
+            dtype=np.float64,
+        )
+        return rotation @ position_odom + offset, rotation @ vector_odom
+
+    def publish_positions(
+        self,
+        position_base,
+        stamp,
+        confidence,
+        point_count,
+        odom,
+        confirmation,
+        wall_normal_map,
+    ):
         base_msg = PointStamped()
         base_msg.header.stamp = stamp
         base_msg.header.frame_id = "base_link"
         base_msg.point.x, base_msg.point.y, base_msg.point.z = map(float, position_base)
         self.base_position_pub.publish(base_msg)
 
-        marker_frame = "base_link"
-        marker_position = position_base
-        if self.latest_odom is not None:
-            pose = self.latest_odom.pose.pose
-            q = pose.orientation
-            rotation = quaternion_rotation_matrix(q.x, q.y, q.z, q.w)
-            translation = np.array(
-                [pose.position.x, pose.position.y, pose.position.z], dtype=np.float64
-            )
-            marker_position = rotation @ position_base + translation
-            marker_frame = self.latest_odom.header.frame_id or "odom"
-            odom_msg = PointStamped()
-            odom_msg.header.stamp = stamp
-            odom_msg.header.frame_id = marker_frame
-            odom_msg.point.x, odom_msg.point.y, odom_msg.point.z = map(
-                float, marker_position
-            )
-            self.odom_position_pub.publish(odom_msg)
+        marker_position, _ = self.base_to_odom(position_base, odom)
+        marker_frame = odom.header.frame_id or "odom"
+        odom_msg = PointStamped()
+        odom_msg.header.stamp = stamp
+        odom_msg.header.frame_id = marker_frame
+        odom_msg.point.x, odom_msg.point.y, odom_msg.point.z = map(
+            float, marker_position
+        )
+        self.odom_position_pub.publish(odom_msg)
 
         marker = Marker()
         marker.header.stamp = stamp
@@ -498,6 +571,23 @@ class ScissorsRGBLidar(Node):
         marker.color.a = 1.0
         self.marker_pub.publish(marker)
 
+        if confirmation is not None:
+            target = PoseWithCovarianceStamped()
+            target.header.stamp = stamp
+            target.header.frame_id = "map"
+            target.pose.pose.position.x = float(confirmation.position[0])
+            target.pose.pose.position.y = float(confirmation.position[1])
+            target.pose.pose.position.z = float(confirmation.position[2])
+            yaw = math.atan2(wall_normal_map[1], wall_normal_map[0])
+            target.pose.pose.orientation.z = math.sin(0.5 * yaw)
+            target.pose.pose.orientation.w = math.cos(0.5 * yaw)
+            covariance = np.zeros((6, 6), dtype=np.float64)
+            covariance[:3, :3] = confirmation.covariance
+            covariance[3, 3] = covariance[4, 4] = 999.0
+            covariance[5, 5] = 0.10
+            target.pose.covariance = covariance.reshape(-1).tolist()
+            self.target_pose_pub.publish(target)
+
         now = time.monotonic()
         if now - self.last_position_log_time >= 1.0:
             self.get_logger().info(
@@ -508,12 +598,21 @@ class ScissorsRGBLidar(Node):
             self.last_position_log_time = now
 
     def image_callback(self, msg):
-        if (
-            self.camera_matrix is None
-            or not self.collection_complete
-            or self.latest_cloud is None
-        ):
+        if self.camera_matrix is None or not self.cloud_buffer:
             return
+
+        image_stamp = msg.header.stamp.sec + msg.header.stamp.nanosec * 1e-9
+        cloud_match = self.closest_message(self.cloud_buffer, image_stamp)
+        odom_match = self.closest_message(self.odom_buffer, image_stamp)
+        if cloud_match is None or odom_match is None:
+            if time.monotonic() - self.last_wait_log_time > 2.0:
+                self.get_logger().warning(
+                    "Waiting for timestamp-matched image, cloud, and odometry"
+                )
+                self.last_wait_log_time = time.monotonic()
+            return
+        _, points_body, cloud_header = cloud_match
+        _, matched_odom = odom_match
 
         try:
             raw_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding="bgr8")
@@ -546,8 +645,7 @@ class ScissorsRGBLidar(Node):
         torch.cuda.synchronize(DEVICE)
         display = result.plot()
 
-        points_body = self.latest_cloud.copy()
-        cloud_header = self.latest_cloud_header
+        points_body = points_body.copy()
         points_camera = (R_CAM_BODY @ points_body.T).T + T_CAM_BODY
         depths = points_camera[:, 2]
         valid = (
@@ -581,12 +679,28 @@ class ScissorsRGBLidar(Node):
                 confidence = float(box.conf[0].item())
                 bbox = box.xyxy[0].detach().cpu().numpy()
                 current_box_detections.append((confidence, bbox.copy()))
-                candidates, selected = self.associate_box(
-                    bbox, points_camera, projected, valid_indices
+                try:
+                    estimate = estimate_wall_target(
+                        points_body,
+                        bbox,
+                        self.rectified_camera_matrix,
+                        R_CAM_BODY,
+                        T_CAM_BODY,
+                        min_depth=MIN_DEPTH,
+                        max_depth=MAX_DEPTH,
+                        min_wall_support=MIN_WALL_SUPPORT,
+                        max_wall_rms=MAX_WALL_RMS,
+                    )
+                except ValueError:
+                    estimate = None
+                selected = (
+                    estimate.support_indices
+                    if estimate is not None
+                    else np.empty(0, dtype=np.int64)
                 )
-                associations.append((confidence, bbox, candidates, selected))
-                if len(selected) >= MIN_CLUSTER_POINTS:
-                    detections.append((confidence, bbox, candidates, selected))
+                associations.append((confidence, bbox, selected, selected))
+                if estimate is not None:
+                    detections.append((confidence, bbox, estimate))
 
         now = time.monotonic()
         if current_box_detections:
@@ -597,13 +711,29 @@ class ScissorsRGBLidar(Node):
             and now - self.cached_detection_time <= DETECTION_HOLD_SEC
         ):
             for confidence, bbox in self.cached_detections:
-                candidates, selected = self.associate_box(
-                    bbox, points_camera, projected, valid_indices
+                try:
+                    estimate = estimate_wall_target(
+                        points_body,
+                        bbox,
+                        self.rectified_camera_matrix,
+                        R_CAM_BODY,
+                        T_CAM_BODY,
+                        min_depth=MIN_DEPTH,
+                        max_depth=MAX_DEPTH,
+                        min_wall_support=MIN_WALL_SUPPORT,
+                        max_wall_rms=MAX_WALL_RMS,
+                    )
+                except ValueError:
+                    estimate = None
+                selected = (
+                    estimate.support_indices
+                    if estimate is not None
+                    else np.empty(0, dtype=np.int64)
                 )
-                associations.append((confidence, bbox, candidates, selected))
+                associations.append((confidence, bbox, selected, selected))
                 target_box_count += 1
-                if len(selected) >= MIN_CLUSTER_POINTS:
-                    detections.append((confidence, bbox, candidates, selected))
+                if estimate is not None:
+                    detections.append((confidence, bbox, estimate))
                 x1, y1, x2, y2 = np.rint(bbox).astype(int)
                 cv2.rectangle(display, (x1, y1), (x2, y2), (0, 200, 255), 2)
                 cv2.putText(
@@ -624,6 +754,10 @@ class ScissorsRGBLidar(Node):
                 )
                 self.last_wait_log_time = now
 
+        candidate_message = Bool()
+        candidate_message.data = target_box_count > 0
+        self.candidate_pub.publish(candidate_message)
+
         height, width = display.shape[:2]
         visible_uv = projected[valid_indices]
         visible_mask = (
@@ -636,10 +770,7 @@ class ScissorsRGBLidar(Node):
         for u, v in np.rint(visible_uv[visible_mask]).astype(int):
             cv2.circle(display, (u, v), 1, (255, 180, 0), -1)
 
-        for _, bbox, candidates, selected in associations:
-            for index in candidates:
-                u, v = np.rint(projected[index]).astype(int)
-                cv2.circle(display, (u, v), 3, (0, 255, 255), -1)
+        for _, bbox, _, selected in associations:
             for index in selected:
                 u, v = np.rint(projected[index]).astype(int)
                 cv2.circle(display, (u, v), 6, (255, 0, 255), -1)
@@ -647,7 +778,7 @@ class ScissorsRGBLidar(Node):
             label_y = min(height - 10, max(25, int(bbox[3]) + 28))
             cv2.putText(
                 display,
-                f"LiDAR in box: {len(candidates)}  selected: {len(selected)}",
+                f"Wall support points: {len(selected)}",
                 (label_x, label_y),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.65,
@@ -659,22 +790,48 @@ class ScissorsRGBLidar(Node):
         selected_all = np.empty(0, dtype=np.int64)
         if detections:
             selected_all = np.unique(
-                np.concatenate([item[3] for item in detections])
+                np.concatenate([item[2].support_indices for item in detections])
             )
-            best_confidence, _, _, best_selected = max(
+            best_confidence, _, best_estimate = max(
                 detections, key=lambda item: item[0]
             )
-            position_base = np.median(points_body[best_selected], axis=0)
+            position_base = best_estimate.position
+            position_odom, odom_rotation = self.base_to_odom(
+                position_base,
+                matched_odom,
+            )
+            wall_normal_odom = odom_rotation @ best_estimate.wall_normal
+            map_estimate = self.odom_to_map(
+                position_odom,
+                wall_normal_odom,
+                cloud_header.stamp,
+                matched_odom.header.frame_id or "odom",
+            )
+            confirmation = None
+            wall_normal_map = wall_normal_odom
+            if map_estimate is not None:
+                position_map, wall_normal_map = map_estimate
+                confirmation = self.target_confirmer.add(
+                    position_map,
+                    len(best_estimate.support_indices),
+                    best_estimate.plane_rms,
+                )
+            else:
+                self.target_confirmer.add(None, 0, math.inf)
             self.publish_positions(
                 position_base,
                 cloud_header.stamp,
                 best_confidence,
-                len(best_selected),
+                len(best_estimate.support_indices),
+                matched_odom,
+                confirmation,
+                wall_normal_map,
             )
             cv2.putText(
                 display,
                 f"3D base: {position_base[0]:.2f}, {position_base[1]:.2f}, "
-                f"{position_base[2]:.2f} m | points: {len(best_selected)}",
+                f"{position_base[2]:.2f} m | wall points: "
+                f"{len(best_estimate.support_indices)}",
                 (25, 45),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.75,
@@ -683,8 +840,9 @@ class ScissorsRGBLidar(Node):
                 cv2.LINE_AA,
             )
         else:
+            self.target_confirmer.add(None, 0, math.inf)
             status = (
-                "Scissors detected, but no LiDAR point projects inside its box"
+                "Scissors detected, but no valid surrounding wall was fitted"
                 if target_box_count
                 else "No scissors detected"
             )
@@ -701,7 +859,7 @@ class ScissorsRGBLidar(Node):
 
         cv2.putText(
             display,
-            "Blue: projected LiDAR  Yellow: in box  Magenta: selected",
+            "Blue: projected LiDAR  Magenta: fitted wall support",
             (25, height - 55),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.65,
@@ -721,7 +879,7 @@ class ScissorsRGBLidar(Node):
         )
         cv2.putText(
             display,
-            "SPACE: show latest 10 frames in Open3D   Q: quit   S: save",
+            "SPACE: show matched frame in Open3D   Q: quit   S: save",
             (25, height - 20),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.65,
@@ -743,9 +901,8 @@ class ScissorsRGBLidar(Node):
                 self.publish_colored_cloud(points_body, selected_all, cloud_header)
                 self.update_open3d(points_body, selected_all)
                 self.get_logger().info(
-                    f"Open3D snapshot updated: latest {ACCUMULATION_FRAMES} "
-                    f"frames, {len(points_body)} total points, "
-                    f"{len(selected_all)} scissors points"
+                    f"Open3D matched-frame snapshot: {len(points_body)} points, "
+                    f"{len(selected_all)} wall support points"
                 )
             elif key == ord("s"):
                 cv2.imwrite(str(RGB_SNAPSHOT_PATH), display)
