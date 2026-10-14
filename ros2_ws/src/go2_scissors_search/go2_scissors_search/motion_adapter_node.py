@@ -208,7 +208,11 @@ def main(args=None):
     except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
-        node.publish_stop("motion adapter shutdown")
+        # The ROS signal handler may already have invalidated the context.
+        # Publishing after that point raises RCLError and cannot deliver a
+        # stop command. Normal KeyboardInterrupt shutdown still publishes it.
+        if rclpy.ok():
+            node.publish_stop("motion adapter shutdown")
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
