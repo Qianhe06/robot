@@ -61,6 +61,8 @@ class MissionManagerNode(Node):
         self.active_target_position = None
         self.last_candidate_time = None
         self.last_state = None
+        self.last_status_detail = "ready; search disabled"
+        self.last_status_level = DiagnosticStatus.OK
 
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
@@ -110,6 +112,7 @@ class MissionManagerNode(Node):
             self.enable_callback,
         )
         self.create_timer(1.0, self.tick)
+        self.create_timer(1.0, self.republish_status)
         self.publish_status("ready; search disabled")
 
     def map_callback(self, message):
@@ -688,6 +691,8 @@ class MissionManagerNode(Node):
         self.publish_status(reason, DiagnosticStatus.ERROR)
 
     def publish_status(self, message, level=DiagnosticStatus.OK):
+        self.last_status_detail = str(message)
+        self.last_status_level = level
         report = DiagnosticArray()
         report.header.stamp = self.get_clock().now().to_msg()
         status = DiagnosticStatus()
@@ -702,6 +707,12 @@ class MissionManagerNode(Node):
         report.status = [status]
         self.status_pub.publish(report)
         self.last_state = self.mission.state
+
+    def republish_status(self):
+        self.publish_status(
+            self.last_status_detail,
+            self.last_status_level,
+        )
 
     def tick(self):
         if self.grid is None:
