@@ -12,7 +12,15 @@ if [[ ! -f /opt/ros/humble/setup.bash ]]; then
   return 1
 fi
 
+_go2_restore_nounset=false
+if [[ $- == *u* ]]; then
+  _go2_restore_nounset=true
+  set +u
+fi
 source /opt/ros/humble/setup.bash
+if [[ "$_go2_restore_nounset" == true ]]; then
+  set -u
+fi
 
 _go2_prepend() {
   local variable_name="$1"
@@ -77,4 +85,5 @@ unset _go2_package_prefix
 unset _go2_prefix
 unset _go2_python_path
 unset _go2_robot_nic
+unset _go2_restore_nounset
 unset -f _go2_prepend
