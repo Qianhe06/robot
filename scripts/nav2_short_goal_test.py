@@ -14,6 +14,7 @@ from nav_msgs.msg import OccupancyGrid, Odometry
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
+from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
 from std_srvs.srv import SetBool, Trigger
 from tf2_ros import Buffer, TransformException, TransformListener
@@ -62,7 +63,7 @@ class ShortGoalTest(Node):
             Odometry,
             "/sensors/odom_synced",
             self.odom_callback,
-            50,
+            qos_profile_sensor_data,
         )
         self.create_subscription(
             OccupancyGrid,
