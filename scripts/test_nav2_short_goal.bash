@@ -7,7 +7,7 @@ project_root="$(
 
 if [[ "${1:-}" != "--clear-path-confirmed" ]]; then
   echo "该测试会让机器人通过 Nav2 向前导航 0.50 米。" >&2
-  echo "请使用平整防滑地面，清空前方至少 2 米区域。" >&2
+  echo "请使用平整防滑地面，清空前方 90 度扇区至少 2 米。" >&2
   echo "请握住遥控器并准备物理急停。" >&2
   echo "准备完成后使用参数 --clear-path-confirmed 重新运行。" >&2
   exit 2

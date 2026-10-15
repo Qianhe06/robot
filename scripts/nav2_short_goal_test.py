@@ -102,14 +102,15 @@ class ShortGoalTest(Node):
                 rclpy.spin_once(self, timeout_sec=0.10)
         raise RuntimeError(f"map -> base_footprint unavailable: {last_error}")
 
-    def make_goal(self):
-        """Build a map-frame goal directly ahead of the current robot pose."""
+    def make_goal(self, yaw_offset=0.0):
+        """Build a nearby map-frame goal at a bounded heading offset."""
         transform = self.current_transform().transform
         rotation = transform.rotation
         yaw = math.atan2(
             2.0 * (rotation.w * rotation.z + rotation.x * rotation.y),
             1.0 - 2.0 * (rotation.y * rotation.y + rotation.z * rotation.z),
         )
+        goal_yaw = yaw + float(yaw_offset)
         self.start_map_pose = (
             float(transform.translation.x),
             float(transform.translation.y),
@@ -119,18 +120,19 @@ class ShortGoalTest(Node):
         goal.header.frame_id = "map"
         goal.header.stamp = self.get_clock().now().to_msg()
         goal.pose.position.x = (
-            transform.translation.x + self.distance * math.cos(yaw)
+            transform.translation.x + self.distance * math.cos(goal_yaw)
         )
         goal.pose.position.y = (
-            transform.translation.y + self.distance * math.sin(yaw)
+            transform.translation.y + self.distance * math.sin(goal_yaw)
         )
-        goal.pose.orientation.z = math.sin(0.5 * yaw)
-        goal.pose.orientation.w = math.cos(0.5 * yaw)
+        goal.pose.orientation.z = math.sin(0.5 * goal_yaw)
+        goal.pose.orientation.w = math.cos(0.5 * goal_yaw)
         print(
             "Nav2 target: "
             f"x={goal.pose.position.x:.3f}, "
             f"y={goal.pose.position.y:.3f}, "
-            f"distance={self.distance:.2f} m"
+            f"distance={self.distance:.2f} m, "
+            f"heading_offset={math.degrees(yaw_offset):.0f} deg"
         )
         return goal
 
@@ -152,8 +154,10 @@ class ShortGoalTest(Node):
             "path planning",
         )
         if wrapped.status != GoalStatus.STATUS_SUCCEEDED:
+            error_code = getattr(wrapped.result, "error_code", "unknown")
             raise RuntimeError(
-                f"path planning failed with status {wrapped.status}"
+                f"path planning failed with status {wrapped.status}, "
+                f"error_code {error_code}"
             )
         poses = wrapped.result.path.poses
         if len(poses) < 2:
@@ -164,6 +168,24 @@ class ShortGoalTest(Node):
             dy = second.pose.position.y - first.pose.position.y
             path_length += math.hypot(dx, dy)
         print(f"Path accepted: {len(poses)} poses, {path_length:.3f} m")
+
+    def select_plannable_goal(self):
+        """Try a narrow forward fan and return the first reachable target."""
+        offsets = (0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0)
+        failures = []
+        for offset_degrees in offsets:
+            offset = math.radians(offset_degrees)
+            target = self.make_goal(offset)
+            try:
+                self.plan(target)
+                return target
+            except Exception as error:
+                failures.append(f"{offset_degrees:+.0f} deg: {error}")
+                print(f"Candidate rejected: {failures[-1]}")
+        details = "; ".join(failures)
+        raise RuntimeError(
+            f"no reachable test target in forward fan: {details}"
+        )
 
     def set_motion(self, enabled):
         """Enable or disable the guarded Unitree motion adapter."""
@@ -338,8 +360,7 @@ class ShortGoalTest(Node):
     def run(self):
         """Execute the complete plan-before-motion test sequence."""
         self.wait_for_interfaces()
-        target = self.make_goal()
-        self.plan(target)
+        target = self.select_plannable_goal()
         if self.dry_run_seconds > 0.0:
             self.dry_run(target)
             return
