@@ -29,9 +29,14 @@ class SearchConsole(Node):
         )
         self.last_status = None
         self.finished = False
+        self.activation_stamp = None
 
     def status_callback(self, message):
         if not message.status:
+            return
+        stamp = message.header.stamp
+        stamp_ns = stamp.sec * 1_000_000_000 + stamp.nanosec
+        if self.activation_stamp is None or stamp_ns < self.activation_stamp:
             return
         status = message.status[0]
         detail = next(
@@ -79,6 +84,7 @@ def main():
     signal.signal(signal.SIGINT, request_stop)
     signal.signal(signal.SIGTERM, request_stop)
     try:
+        node.activation_stamp = node.get_clock().now().nanoseconds
         node.set_enabled(node.search_client, True, timeout=8.0)
         started = True
         print("任务运行中；按 Ctrl+C 取消并禁用运动。", flush=True)
