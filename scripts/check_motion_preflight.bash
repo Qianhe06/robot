@@ -39,6 +39,7 @@ done
 
 echo "===== 地图与代价地图 ====="
 for topic in \
+  /scan \
   /map \
   /local_costmap/costmap_raw \
   /global_costmap/costmap_raw; do
@@ -48,6 +49,10 @@ for topic in \
   grep -Eq 'Publisher count: [1-9][0-9]*' <<<"$info" || \
     fail "$topic 没有发布者"
 done
+
+if ! timeout 8 ros2 topic echo /scan --once >/dev/null; then
+  fail "/scan 过滤后没有收到激光数据"
+fi
 
 if ! timeout 8 ros2 topic echo /map --once \
   --qos-durability transient_local >/dev/null; then

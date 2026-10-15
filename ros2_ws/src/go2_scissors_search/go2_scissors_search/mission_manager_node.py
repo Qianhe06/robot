@@ -9,7 +9,7 @@ from ament_index_python.packages import get_package_share_directory
 from action_msgs.msg import GoalStatus
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
-from nav2_msgs.action import ComputePathToPose, NavigateToPose, Spin
+from nav2_msgs.action import NavigateToPose, Spin
 from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid, Path
 import numpy as np
@@ -21,12 +21,12 @@ from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
 from std_srvs.srv import SetBool
-from std_msgs.msg import Bool
+from std_msgs.msg import Bool, Float32
 from tf2_ros import Buffer, TransformException, TransformListener
 
 from .mission_core import SearchMission, SearchState
 from .navigation_core import CostGrid, frontier_goals, GridMap
-from .navigation_core import inspection_goals, nearest_safe_standoff
+from .navigation_core import inspection_goals
 from .navigation_core import local_approach_command, pose_is_safe, Pose2D
 
 
@@ -67,8 +67,6 @@ class MissionManagerNode(Node):
         self.confirmation_deadline = None
         self.stationary_ready_time = None
         self.target_selection_started = False
-        self.path_candidates = []
-        self.path_results = []
         self.active_target_position = None
         self.local_target = None
         self.local_normal = None
@@ -79,6 +77,8 @@ class MissionManagerNode(Node):
         self.local_progress_time = None
         self.local_best_distance = None
         self.last_candidate_time = None
+        self.latest_confidence = 0.0
+        self.last_confidence_time = None
         self.last_state = None
         self.last_status_detail = "ready; search disabled"
         self.last_status_level = DiagnosticStatus.OK
@@ -86,11 +86,6 @@ class MissionManagerNode(Node):
         self.tf_buffer = Buffer()
         self.tf_listener = TransformListener(self.tf_buffer, self)
         self.navigator = ActionClient(self, NavigateToPose, "navigate_to_pose")
-        self.path_planner = ActionClient(
-            self,
-            ComputePathToPose,
-            "compute_path_to_pose",
-        )
         self.spinner = ActionClient(self, Spin, "spin")
         self.motion_client = self.create_client(SetBool, "/go2_motion/enable")
         self.local_mode_client = self.create_client(
@@ -136,6 +131,12 @@ class MissionManagerNode(Node):
             Bool,
             "/scissors/candidate",
             self.candidate_callback,
+            10,
+        )
+        self.create_subscription(
+            Float32,
+            "/scissors/detection_confidence",
+            self.confidence_callback,
             10,
         )
         self.create_service(
@@ -267,10 +268,10 @@ class MissionManagerNode(Node):
             self.confirmation_deadline = None
             self.stationary_ready_time = None
             self.target_selection_started = False
-            self.path_candidates.clear()
-            self.path_results.clear()
             self.active_target_position = None
             self.last_candidate_time = None
+            self.latest_confidence = 0.0
+            self.last_confidence_time = None
             self.mission.start()
             if self.grid is not None and self.global_cost_grid is not None:
                 self.mission.map_ready()
@@ -414,6 +415,19 @@ class MissionManagerNode(Node):
             self.confirmation_deadline = now + 2.0
             self.stationary_ready_time = now + 0.20
             self.reset_confirmation_window()
+
+    def confidence_callback(self, message):
+        self.latest_confidence = float(message.data)
+        self.last_confidence_time = (
+            self.get_clock().now().nanoseconds * 1e-9
+        )
+
+    def confidence_ready(self, now):
+        return (
+            self.last_confidence_time is not None
+            and now - self.last_confidence_time <= 1.5
+            and self.latest_confidence > 0.90
+        )
 
     def filter_unvisited(self, goals):
         separation = self.get_parameter("goal_separation").value
@@ -585,16 +599,7 @@ class MissionManagerNode(Node):
         if purpose in ("frontier", "inspection") and goal_pose is not None:
             self.visited_goals.append(goal_pose)
 
-        if purpose == "approach":
-            if succeeded:
-                self.mission.target_reached()
-                self.request_motion(False)
-                self.publish_status("target reached and robot stopped")
-            else:
-                state = self.mission.approach_failed()
-                self.request_motion(False)
-                self.publish_status(f"approach failed; state={state.value}")
-        elif purpose == "return" and succeeded:
+        if purpose == "return" and succeeded:
             self.mission.returned_without_target()
             self.request_motion(False)
             self.publish_status("returned to start; target not found")
@@ -636,9 +641,23 @@ class MissionManagerNode(Node):
             self.local_mode_client.call_async(request)
 
     def begin_local_approach(self):
+        now = self.get_clock().now().nanoseconds * 1e-9
+        if self.confidence_ready(now):
+            self.finish_at_confidence()
+            return True
         current = self.current_pose()
         if current is None:
             return False
+        closest_distance = min(
+            math.hypot(target[0] - current.x, target[1] - current.y)
+            for target, _ in self.target_candidates
+        )
+        if closest_distance <= 0.62:
+            self.fail(
+                f"minimum wall clearance {closest_distance:.2f} m; "
+                f"YOLO confidence={self.latest_confidence:.0%}"
+            )
+            return True
         nearby = []
         for target, normal in self.target_candidates:
             command = local_approach_command(current, target, normal)
@@ -662,11 +681,23 @@ class MissionManagerNode(Node):
         future.add_done_callback(
             lambda result: self.local_mode_response(result, generation)
         )
-        self.publish_status(
-            "no mapped parking pose; selecting Go2 native avoidance "
-            "for nearby confirmed target"
-        )
+        self.publish_status("selecting Go2 native avoidance for target")
         return True
+
+    def finish_at_confidence(self):
+        self.request_motion(False)
+        self.stop_local_approach()
+        self.target_candidates.clear()
+        self.target_selection_started = False
+        self.target_collection_deadline = None
+        self.confirmation_deadline = None
+        self.stationary_ready_time = None
+        self.mission.target_confirmed()
+        self.mission.target_reached()
+        self.publish_status(
+            f"scissors detected with {self.latest_confidence:.0%} confidence; "
+            "robot stopped"
+        )
 
     def local_mode_response(self, future, generation):
         try:
@@ -703,6 +734,9 @@ class MissionManagerNode(Node):
         self.local_start_time = now
         self.local_progress_time = now
         self.local_best_distance = math.inf
+        if self.confidence_ready(now):
+            self.finish_at_confidence()
+            return
         self.request_motion(True)
         self.publish_status("approaching with Go2 native avoidance")
 
@@ -710,8 +744,14 @@ class MissionManagerNode(Node):
         if not self.local_mode_active:
             return
         now = self.get_clock().now().nanoseconds * 1e-9
+        if self.confidence_ready(now):
+            self.finish_at_confidence()
+            return
         if now - self.local_start_time > 10.0:
-            self.local_approach_failed("local approach timed out")
+            self.fail(
+                "local approach timed out; "
+                f"YOLO confidence={self.latest_confidence:.0%}"
+            )
             return
         if (
             self.last_candidate_time is None
@@ -723,6 +763,16 @@ class MissionManagerNode(Node):
         if pose is None:
             self.local_approach_failed("map pose unavailable")
             return
+        distance = math.hypot(
+            self.local_target[0] - pose.x,
+            self.local_target[1] - pose.y,
+        )
+        if distance <= 0.62:
+            self.fail(
+                f"minimum wall clearance {distance:.2f} m; "
+                f"YOLO confidence={self.latest_confidence:.0%}"
+            )
+            return
         command = local_approach_command(
             pose, self.local_target, self.local_normal
         )
@@ -731,25 +781,16 @@ class MissionManagerNode(Node):
                 "local target is outside the near, forward, free-side corridor"
             )
             return
-        distance = math.hypot(
-            self.local_target[0] - pose.x,
-            self.local_target[1] - pose.y,
-        )
         if distance < self.local_best_distance - 0.03:
             self.local_best_distance = distance
             self.local_progress_time = now
         if now - self.local_progress_time > 4.0:
-            self.local_approach_failed("local approach made no progress")
-            return
-        forward, turn, reached = command
-        if reached:
-            self.request_motion(False)
-            self.stop_local_approach()
-            self.mission.target_reached()
-            self.publish_status(
-                f"target reached with native avoidance; range={distance:.2f} m"
+            self.fail(
+                f"Go2 avoidance blocked approach at {distance:.2f} m; "
+                f"YOLO confidence={self.latest_confidence:.0%}"
             )
             return
+        forward, turn = command
         message = Twist()
         message.linear.x = forward
         message.angular.z = turn
@@ -815,136 +856,15 @@ class MissionManagerNode(Node):
         self.motion_requested_for_goal = False
         self.request_motion(False)
 
-    @staticmethod
-    def path_length(path):
-        total = 0.0
-        for first, second in zip(path.poses, path.poses[1:]):
-            total += math.hypot(
-                second.pose.position.x - first.pose.position.x,
-                second.pose.position.y - first.pose.position.y,
-            )
-        return total
-
     def begin_target_selection(self):
-        """Create safe poses and rank reachable ones using Nav2 paths."""
+        """Use the confirmed target directly; mapping plans only the search."""
         self.target_selection_started = True
-        self.path_candidates.clear()
-        self.path_results.clear()
-        parameter = self.get_parameter
-        rejections = []
-        for target, free_normal in self.target_candidates:
-            standoff = nearest_safe_standoff(
-                self.grid,
-                target,
-                free_normal,
-                robot_length=parameter("robot_length").value,
-                robot_width=parameter("robot_width").value,
-                inflation=parameter("safety_inflation").value,
-            )
-            if standoff is None:
-                rejections.append(
-                    f"target ({target[0]:.2f}, {target[1]:.2f}): "
-                    "no footprint-safe pose in mapped free space"
-                )
-            elif not self.navigation_goal_is_safe(standoff):
-                cost = self.global_cost_grid.cost_at(
-                    standoff.x, standoff.y
-                )
-                rejections.append(
-                    f"standoff ({standoff.x:.2f}, {standoff.y:.2f}): "
-                    f"global cost={cost}"
-                )
-            else:
-                self.path_candidates.append((standoff, target))
-        if not self.path_candidates:
-            detail = "; ".join(rejections[:3]) or "no confirmed target"
-            if self.begin_local_approach():
-                return
+        if not self.target_candidates:
+            self.target_selection_failed("no confirmed target")
+        elif not self.begin_local_approach():
             self.target_selection_failed(
-                f"no collision-free target pose; {detail}"
+                "confirmed target is outside the near approach corridor"
             )
-            return
-        if not self.path_planner.server_is_ready():
-            self.target_selection_failed("Nav2 path planner unavailable")
-            return
-        self.plan_next_target_path()
-
-    def plan_next_target_path(self):
-        if not self.path_candidates:
-            if not self.path_results:
-                self.target_selection_failed("no target pose has a valid path")
-                return
-            safe_results = [
-                result for result in self.path_results
-                if self.navigation_goal_is_safe(result[1])
-            ]
-            if not safe_results:
-                self.target_selection_failed(
-                    "target poses became unsafe before approach"
-                )
-                return
-            _, best_pose, best_target = min(
-                safe_results,
-                key=lambda item: item[0],
-            )
-            self.target_candidates.clear()
-            self.target_collection_deadline = None
-            self.confirmation_deadline = None
-            self.stationary_ready_time = None
-            self.target_selection_started = False
-            self.active_target_position = best_target
-            self.mission.target_confirmed()
-            if not self.send_navigation_goal(best_pose, "approach"):
-                self.request_motion(False)
-                self.target_selection_failed("target pose is not traversable")
-                return
-            self.publish_status("approaching target with shortest Nav2 path")
-            return
-
-        pose, target = self.path_candidates.pop(0)
-        goal = ComputePathToPose.Goal()
-        goal.goal = self.pose_message(pose, self.get_clock().now().to_msg())
-        goal.use_start = False
-        future = self.path_planner.send_goal_async(goal)
-        future.add_done_callback(
-            lambda result: self.path_goal_response(result, pose, target)
-        )
-
-    def path_goal_response(self, future, pose, target):
-        if (
-            self.mission.state != SearchState.CONFIRMING
-            or not self.target_selection_started
-        ):
-            return
-        try:
-            handle = future.result()
-        except Exception as error:
-            self.get_logger().warning(f"path request failed: {error}")
-            self.plan_next_target_path()
-            return
-        if not handle.accepted:
-            self.plan_next_target_path()
-            return
-        result_future = handle.get_result_async()
-        result_future.add_done_callback(
-            lambda result: self.path_goal_result(result, pose, target)
-        )
-
-    def path_goal_result(self, future, pose, target):
-        if (
-            self.mission.state != SearchState.CONFIRMING
-            or not self.target_selection_started
-        ):
-            return
-        try:
-            wrapped = future.result()
-            if wrapped.status == GoalStatus.STATUS_SUCCEEDED:
-                length = self.path_length(wrapped.result.path)
-                if wrapped.result.path.poses:
-                    self.path_results.append((length, pose, target))
-        except Exception as error:
-            self.get_logger().warning(f"path result failed: {error}")
-        self.plan_next_target_path()
 
     def target_selection_failed(self, reason):
         self.target_candidates.clear()
@@ -993,21 +913,6 @@ class MissionManagerNode(Node):
         if self.grid is None:
             return
         now = self.get_clock().now().nanoseconds * 1e-9
-        if (
-            self.mission.state == SearchState.APPROACHING
-            and not (self.local_mode_active or self.local_mode_pending)
-            and self.last_candidate_time is not None
-            and now - self.last_candidate_time > 1.0
-        ):
-            self.cancel_navigation()
-            self.request_motion(False)
-            state = self.mission.approach_failed()
-            self.confirmation_deadline = None
-            self.stationary_ready_time = None
-            self.target_collection_deadline = None
-            self.target_selection_started = False
-            self.publish_status(f"target lost during approach; {state.value}")
-            return
         if (
             self.goal_handle is not None
             or self.goal_pending

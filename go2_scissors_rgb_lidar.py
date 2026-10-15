@@ -24,7 +24,7 @@ from rclpy.qos import qos_profile_sensor_data
 from rclpy.time import Time
 from sensor_msgs.msg import CameraInfo, Image, PointCloud2, PointField
 from sensor_msgs_py import point_cloud2
-from std_msgs.msg import Bool, Header
+from std_msgs.msg import Bool, Float32, Header
 from tf2_ros import Buffer, TransformException, TransformListener
 from ultralytics import YOLO
 from visualization_msgs.msg import Marker
@@ -196,6 +196,11 @@ class ScissorsRGBLidar(Node):
         self.candidate_pub = self.create_publisher(
             Bool,
             "/scissors/candidate",
+            10,
+        )
+        self.confidence_pub = self.create_publisher(
+            Float32,
+            "/scissors/detection_confidence",
             10,
         )
         self.overlay_pub = self.create_publisher(
@@ -701,6 +706,13 @@ class ScissorsRGBLidar(Node):
                 associations.append((confidence, bbox, selected, selected))
                 if estimate is not None:
                     detections.append((confidence, bbox, estimate))
+
+        confidence_message = Float32()
+        confidence_message.data = max(
+            (item[0] for item in current_box_detections),
+            default=0.0,
+        )
+        self.confidence_pub.publish(confidence_message)
 
         now = time.monotonic()
         if current_box_detections:

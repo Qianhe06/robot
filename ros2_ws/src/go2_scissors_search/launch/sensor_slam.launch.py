@@ -58,7 +58,7 @@ def generate_launch_description():
             output="screen",
             remappings=[
                 ("cloud_in", "/sensors/cloud_base_synced"),
-                ("scan", "/scan"),
+                ("scan", "/scan_raw"),
             ],
             parameters=[{
                 "target_frame": "base_footprint",
@@ -75,6 +75,13 @@ def generate_launch_description():
                 "use_inf": True,
                 "inf_epsilon": 1.0,
             }],
+        ),
+
+        Node(
+            package="go2_scissors_search",
+            executable="scan_filter_node",
+            name="go2_scan_filter",
+            output="screen",
         ),
 
         Node(

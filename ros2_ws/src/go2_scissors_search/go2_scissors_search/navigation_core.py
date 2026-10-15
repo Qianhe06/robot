@@ -76,12 +76,28 @@ class CostGrid(GridMap):
         return cost is not None and cost < int(lethal_threshold)
 
 
+def remove_robot_returns(ranges, angle_min, angle_increment):
+    """Mask scan returns inside the Go2 body before mapping and planning."""
+    filtered = []
+    for index, distance in enumerate(ranges):
+        angle = angle_min + index * angle_increment
+        if (
+            math.isfinite(distance)
+            and abs(distance * math.cos(angle)) <= 0.38
+            and abs(distance * math.sin(angle)) <= 0.17
+        ):
+            filtered.append(math.inf)
+        else:
+            filtered.append(distance)
+    return filtered
+
+
 def local_approach_command(pose, target, free_normal):
     """Return a bounded forward command, or None outside the near approach."""
     dx = float(target[0]) - pose.x
     dy = float(target[1]) - pose.y
     distance = math.hypot(dx, dy)
-    if distance < 0.60 or distance > 1.25:
+    if distance <= 0.62 or distance > 1.25:
         return None
     normal = np.asarray(free_normal, dtype=np.float64)[:2]
     if np.linalg.norm(normal) < 0.9:
@@ -93,13 +109,9 @@ def local_approach_command(pose, target, free_normal):
     heading = math.atan2(math.sin(heading), math.cos(heading))
     if abs(heading) > math.radians(35):
         return None
-    if distance <= 0.68:
-        if abs(heading) <= math.radians(15):
-            return 0.0, 0.0, True
-        return 0.0, max(-0.12, min(0.12, 0.8 * heading)), False
-    forward = min(0.08, max(0.025, 0.5 * (distance - 0.68)))
+    forward = min(0.08, max(0.025, 0.5 * (distance - 0.62)))
     turn = max(-0.12, min(0.12, 0.8 * heading))
-    return forward, turn, False
+    return forward, turn
 
 
 def _neighbours(row, column, height, width, diagonals=False):
@@ -219,47 +231,71 @@ def frontier_goals(
     inflation=0.15,
     max_standoff=2.0,
 ):
-    """Return footprint-safe poses facing each frontier cluster."""
+    """Return spread-out safe poses along each frontier cluster."""
     cells = frontier_cells(grid, free_threshold)
     goals = []
     for component in _connected_components(cells, grid.height, grid.width):
         if len(component) < min_cluster_cells:
             continue
         center = np.mean(component, axis=0)
-        row, column = min(
+        selected = [min(
             component,
             key=lambda cell: float(np.linalg.norm(np.asarray(cell) - center)),
-        )
-        unknown = [
-            cell for cell in _neighbours(
+        )]
+        spacing_cells = 0.8 / grid.resolution
+        while len(selected) < 8:
+            candidate = max(
+                component,
+                key=lambda cell: min(
+                    math.hypot(cell[0] - chosen[0], cell[1] - chosen[1])
+                    for chosen in selected
+                ),
+            )
+            separation = min(
+                math.hypot(
+                    candidate[0] - chosen[0],
+                    candidate[1] - chosen[1],
+                )
+                for chosen in selected
+            )
+            if separation < spacing_cells:
+                break
+            selected.append(candidate)
+
+        for row, column in selected:
+            unknown = [
+                cell for cell in _neighbours(
+                    row,
+                    column,
+                    grid.height,
+                    grid.width,
+                    diagonals=True,
+                )
+                if grid.data[cell] < 0
+            ]
+            yaw = 0.0
+            if unknown:
+                unknown_center = np.mean(unknown, axis=0)
+                yaw = math.atan2(
+                    unknown_center[0] - row,
+                    unknown_center[1] - column,
+                )
+            pose = _safe_frontier_pose(
+                grid,
                 row,
                 column,
-                grid.height,
-                grid.width,
-                diagonals=True,
+                yaw,
+                free_threshold,
+                robot_length,
+                robot_width,
+                inflation,
+                max_standoff,
             )
-            if grid.data[cell] < 0
-        ]
-        yaw = 0.0
-        if unknown:
-            unknown_center = np.mean(unknown, axis=0)
-            yaw = math.atan2(
-                unknown_center[0] - row,
-                unknown_center[1] - column,
-            )
-        pose = _safe_frontier_pose(
-            grid,
-            row,
-            column,
-            yaw,
-            free_threshold,
-            robot_length,
-            robot_width,
-            inflation,
-            max_standoff,
-        )
-        if pose is not None:
-            goals.append(pose)
+            if pose is not None and all(
+                math.hypot(pose.x - goal.x, pose.y - goal.y) >= 0.50
+                for goal in goals
+            ):
+                goals.append(pose)
     return goals
 
 

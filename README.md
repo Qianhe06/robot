@@ -1,6 +1,6 @@
 # Go2 自主寻找墙上剪刀
 
-本项目在 Unitree Go2 上运行 ROS 2 Humble、SLAM Toolbox 和 Nav2。机器人先执行前沿探索，再沿已建地图中的墙面生成观察位姿巡检；检测节点确认墙上剪刀后，任务管理器优先按 Nav2 路径长度选择安全停车位。在狭小场地无法从地图找到停车位时，若目标已确认且就在机器人前方近处，则用 Go2 原生避障接口缓慢接近并停车。未找到目标时返回任务起点。
+本项目在 Unitree Go2 上运行 ROS 2 Humble、SLAM Toolbox 和 Nav2。机器人先执行前沿探索，再沿已建地图中的墙面生成观察位姿巡检；确认墙上剪刀后，在近距离用 Go2 原生避障接口缓慢接近。实时 YOLO 剪刀检测置信度超过 90% 时停车并报告找到目标。未找到目标时返回任务起点。
 
 ## 环境与构建
 
@@ -53,12 +53,15 @@ ros2 service call /scissors_search/enable std_srvs/srv/SetBool "{data: true}"
 `/api/obstacles_avoid/request` 接口发送 API 1004 选择 API 指令源、API 1001
 开启原生避障，并以 20 Hz 将选定的速度指令转成 API 1003
 `Move(mode=0)` 请求。通常使用 Nav2 的 `/cmd_vel`；近距离接近时切换到
-`/cmd_vel_target`，不混用两路指令。仅当已确认目标距离为 0.60–1.25 m、位于
-机器人前方和墙面自由侧，且没有地图安全停车位时才切换。接近速度不超过
-`0.08 m/s`，中心到目标约 `0.68 m` 时停车；目标丢失、定位失效、无进展或超时会
-停止并退出。该模式用 Go2 原生避障处理局部障碍，不能代替对场地中低矮或透明
-障碍物的观察。普通导航仍拒绝全局代价为 253–255 的目标；通用线速度限制为
-`0.25 m/s`，角速度限制为 `0.40 rad/s`。
+`/cmd_vel_target`，不混用两路指令。已确认目标位于机器人前方、墙面自由侧且距离
+不超过 1.25 m 时才接近，不再搜索地图停车位。接近速度不超过 `0.08 m/s`；实时
+YOLO 剪刀置信度超过 90% 时停车。中心距目标达到 `0.62 m`、原生避障阻止前进或
+接近超时而置信度仍不足 90% 时停车并报告失败。YOLO 置信度不保证随距离增加，
+不能用它估计物理距离。普通导航仍拒绝全局代价为 253–255 的目标；通用线速度限制
+为 `0.25 m/s`，角速度限制为 `0.40 rad/s`。
+
+LiDAR 转换的 `/scan_raw` 会过滤位于 `0.76 × 0.34 m` 机身轮廓内的回波，再作为
+`/scan` 交给 SLAM 和 Nav2；Go2 自身的原生避障接口保持启用。
 
 停止任务或急停：
 
@@ -74,6 +77,7 @@ ros2 service call /go2_motion/emergency_stop std_srvs/srv/Trigger "{}"
 ```bash
 ros2 topic echo /scissors_search/status
 ros2 topic echo /scissors/candidate
+ros2 topic echo /scissors/detection_confidence
 ros2 topic echo /scissors/target_pose
 ros2 topic echo /scissors_search/inspection_path
 ros2 action list
@@ -89,8 +93,8 @@ ros2 action list
 
 1. 将机器人架空或保持原地，验证启用、速度限幅、零速度、`StopMove` 和急停。
 2. 在围栏小区域验证地图、Nav2、避障、观察点转向扫描和返回起点。
-3. 在三个不同墙面位置分别验证剪刀定位、停车位和最终朝向。
-4. 放置两把剪刀，确认系统选择 Nav2 路径较短且有有效路径的目标。
+3. 在三个不同墙面位置分别验证剪刀定位、实时置信度和最小墙面间距。
+4. 放置两把剪刀，确认近距离接近不会切换到错误目标。
 5. 分别断开相机、LiDAR 和里程计数据，确认 watchdog 在设定超时后停车并锁定。
 
 首次实机测试时应携带遥控器并保持物理急停能力。实测机身约为

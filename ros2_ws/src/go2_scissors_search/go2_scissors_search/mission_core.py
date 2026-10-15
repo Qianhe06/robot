@@ -86,7 +86,7 @@ class SearchMission:
         return self.state
 
     def target_reached(self):
-        """Finish successfully at the target-facing standoff pose."""
+        """Finish successfully after the target is confidently recognized."""
         if self.state == SearchState.APPROACHING:
             self.state = SearchState.FOUND
         return self.state

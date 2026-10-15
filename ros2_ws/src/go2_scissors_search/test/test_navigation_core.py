@@ -14,17 +14,20 @@ from go2_scissors_search.navigation_core import local_approach_command
 from go2_scissors_search.navigation_core import nearest_safe_standoff
 from go2_scissors_search.navigation_core import pose_is_safe
 from go2_scissors_search.navigation_core import Pose2D
+from go2_scissors_search.navigation_core import remove_robot_returns
 
 
-def test_frontier_cells_form_one_representative_goal():
+def test_frontier_ring_yields_spread_out_safe_goals():
     data = np.full((40, 40), -1, dtype=np.int16)
     data[5:35, 5:35] = 0
     grid = GridMap(data, 40, 40, 0.1)
 
     goals = frontier_goals(grid, min_cluster_cells=4)
 
-    assert len(goals) == 1
-    assert pose_is_safe(grid, goals[0])
+    assert len(goals) >= 4
+    assert all(pose_is_safe(grid, goal) for goal in goals)
+    assert max(goal.x for goal in goals) - min(goal.x for goal in goals) > 1.0
+    assert max(goal.y for goal in goals) - min(goal.y for goal in goals) > 1.0
 
 
 def test_frontier_goal_is_moved_inward_from_unknown_space():
@@ -50,6 +53,20 @@ def test_cost_grid_rejects_inscribed_lethal_unknown_and_outside():
     assert not grid.pose_is_traversable(Pose2D(3.5, 0.5, 0.0))
     assert not grid.pose_is_traversable(Pose2D(4.5, 0.5, 0.0))
     assert not grid.pose_is_traversable(Pose2D(5.5, 0.5, 0.0))
+
+
+def test_scan_filter_removes_body_return_but_preserves_close_side_obstacle():
+    ranges = [0.20, 0.33, 0.39, math.inf]
+
+    filtered = remove_robot_returns(ranges, -math.pi / 2, math.pi / 2)
+
+    assert filtered[0] == 0.20
+    assert math.isinf(filtered[1])
+    assert filtered[2] == 0.39
+    assert math.isinf(filtered[3])
+    assert math.isinf(remove_robot_returns(
+        [0.33], math.radians(-10.5), 0.0
+    )[0])
 
 
 def test_footprint_near_map_edge_uses_rectangle_not_bounding_circle():
@@ -143,25 +160,24 @@ def test_mission_reconfirms_then_resumes_search_after_failures():
     assert mission.approach_failed() == SearchState.EXPLORING
 
 
-def test_local_approach_accepts_snapshot_target_and_stops_at_standoff():
+def test_local_approach_accepts_snapshot_target_and_respects_clearance():
     target = [0.017, -0.810]
     normal = [0.071, -0.997]
     pose = Pose2D(0.275, -1.656, math.radians(97.7))
 
-    forward, turn, reached = local_approach_command(
+    forward, turn = local_approach_command(
         pose, target, normal
     )
 
     assert 0.0 < forward <= 0.08
     assert abs(turn) <= 0.12
-    assert not reached
     assert local_approach_command(
-        Pose2D(0.10, -1.47, math.radians(97.7)), target, normal
-    ) == (0.0, 0.0, True)
-    forward, turn, reached = local_approach_command(
+        Pose2D(0.09, -1.415, math.radians(97.7)), target, normal
+    ) is None
+    forward, turn = local_approach_command(
         Pose2D(0.10, -1.47, math.radians(72)), target, normal
     )
-    assert forward == 0.0 and turn > 0.0 and not reached
+    assert forward > 0.0 and turn > 0.0
 
 
 def test_local_approach_rejects_wrong_side_heading_and_distance():

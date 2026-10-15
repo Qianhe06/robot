@@ -2,12 +2,12 @@
 
 ## Summary
 
-构建完整 ROS2 自主闭环：Go2 在线建图并探索全部可达区域，持续检查墙面；检测到墙上用透明胶带固定的剪刀后，拟合周边墙面确定其三维位置，选择路径最近的目标，导航到代价地图允许的最近安全位置，面向剪刀停车。未找到时返回起点。
+构建 ROS2 自主闭环：Go2 在线建图并探索可达区域，持续检查墙面；确认墙上剪刀位置后，在近距离使用原生避障缓慢接近，实时 YOLO 剪刀置信度超过 90% 时停车。未找到时返回起点。
 
 ## Implementation Changes
 
 - 建立 `go2_scissors_search` ROS2 包，统一提供 SLAM、Nav2、目标定位、区域探索、任务管理和 Unitree 运动适配的 launch/config。
-- 使用 `/utlidar/cloud_base` 经高度过滤和 `pointcloud_to_laserscan` 生成 `/scan`；发布 `/utlidar/robot_odom` 对应的 `odom → base_link` TF，由 `slam_toolbox` 产生 `map → odom`。
+- 使用 `/utlidar/cloud_base` 经高度过滤和 `pointcloud_to_laserscan` 生成 `/scan_raw`，过滤机身轮廓内回波后以 `/scan` 供 SLAM 和 Nav2 使用；发布 `/utlidar/robot_odom` 对应的 `odom → base_link` TF，由 `slam_toolbox` 产生 `map → odom`。
 - 使用 Nav2 的全局规划和局部代价地图；按 `0.70 × 0.28 m` 实测机身及不超过 `0.03 m` 的测量误差，将 footprint 设为 `0.76 × 0.34 m`、额外膨胀 `0.15 m`；速度上限 `0.25 m/s`、角速度上限 `0.40 rad/s`。
 - 实现 `cmd_vel` 适配节点：
   - 启动时通过 `/api/obstacles_avoid/request` 启用远程 API 和避障。
@@ -19,14 +19,14 @@
   - YOLO 框只负责识别；从框周围而非透明胶带表面提取 LiDAR 点，RANSAC 拟合竖直墙面。
   - 用检测框中心相机射线与墙面求交，得到剪刀在 `map` 中的位置；透明胶带或剪刀本身无有效回波也不影响定位。
   - 静止确认阶段要求最近 5 帧中至少 3 帧检测成功、墙面支持点不少于 20、平面残差不超过 5 cm、目标位置离散不超过 25 cm；不满足则恢复搜索。
-  - 保留现有 `/scissors/position_base`、`/scissors/position_odom` 和调试图输出，并新增 `/scissors/target_pose`（`PoseWithCovarianceStamped`，`map` 坐标系）。
+  - 保留现有 `/scissors/position_base`、`/scissors/position_odom` 和调试图输出，并发布 `/scissors/target_pose`（`PoseWithCovarianceStamped`）与实时 `/scissors/detection_confidence`（`Float32`，不使用缓存检测框的旧分数）。
 - 搜索分两阶段：
-  - 首先执行前沿探索，持续扩展在线地图；检测始终开启。
+  - 首先执行前沿探索；连续的未知区域边界生成分散的候选目标，持续扩展在线地图；检测始终开启。
   - 连续三次没有可达前沿后，沿已建地图的墙体/障碍轮廓生成朝墙观察位姿，间隔不超过 1 m，依次巡检未覆盖墙面。
   - 到达观察点后慢速转向扫描；搜索覆盖的是地图中所有可达空间及其可见墙面，不包含门后、遮挡后或机器人无法进入的区域。
-- 发现候选目标后立即取消当前导航并停车确认；多个目标按 Nav2 路径长度选择最近者。
-- 从墙面法向的自由空间侧向外采样停车位，优先选择代价地图中 footprint 不碰撞且存在有效路径的位置。若狭小场地的地图未知区使停车位不可用，只对已确认、前方 1.25 m 内的目标使用 Go2 原生避障低速接近，约 0.68 m 处停车；两路速度指令互斥。
-- 若接近过程中目标位置漂移、路径失效或传感器异常，立即停车；重新确认成功后重规划，连续失败则回到搜索。
+- 发现候选目标后立即取消当前导航并停车确认；多目标时先选择机器人附近可接近者。
+- 已确认目标在前方 1.25 m 内时使用 Go2 原生避障低速接近，实时检测置信度超过 90% 时停止；机身与目标最小距离、目标可见性、接口 watchdog 和超时仍限制运动；两路速度指令互斥。目标接近不再依赖地图停车位，Nav2 继续负责区域探索和返回。
+- 若接近过程中目标位置漂移、目标丢失或传感器异常，立即停车；重新确认成功后再接近，连续失败则回到搜索。
 - 所有可达区域巡检完成仍未找到时，导航回任务起点并报告 `NOT_FOUND`。
 
 ## Public ROS Interfaces
@@ -37,19 +37,20 @@
 - `/scissors_search/status` — `diagnostic_msgs/DiagnosticArray`：发布 `IDLE`、`MAPPING`、`EXPLORING`、`INSPECTING`、`CONFIRMING`、`APPROACHING`、`FOUND`、`RETURNING`、`NOT_FOUND`、`FAULT`、`CANCELLED`。
 - `/scissors_search/inspection_path` — `nav_msgs/Path`：显示待巡检观察位姿。
 - `/scissors/target_pose` — `geometry_msgs/PoseWithCovarianceStamped`：确认后的墙面目标位置。
+- `/scissors/detection_confidence` — `std_msgs/Float32`：当前图像中剪刀的最高实时 YOLO 置信度。
 - 直接使用标准 Nav2 action；Unitree SDK 副本只作为接口参考，不修改其源码。
 
 ## Test Plan
 
-- 单元测试：相机射线与墙面求交、墙面法向选择、目标时序确认、多目标聚类、最近可达停车位、前沿/墙面覆盖规划、Unitree JSON 请求和所有 watchdog。
+- 单元测试：相机射线与墙面求交、墙面法向选择、目标时序确认、多目标聚类、机身回波过滤、前沿/墙面覆盖规划、Unitree JSON 请求和所有 watchdog。
 - 回放测试：用录制的图像、点云和 odom 验证机器人移动时目标在 `map` 中稳定，不出现旧版 10 帧拖影。
 - 分级实机验证：
   1. 架空或原地验证启用、速度限幅、零速、`StopMove` 和急停。
   2. 围栏小区域验证 SLAM、Nav2、厂商避障和返回起点。
   3. 三个不同墙面位置各测试一次剪刀定位与接近。
-  4. 放置两把剪刀，验证选择路径最近者。
+  4. 放置两把剪刀，验证近距离模式选中正确目标。
   5. 无剪刀、遮挡、相机断流、LiDAR 断流和目标丢失场景均应安全停车或返回。
-- 验收标准：无碰墙或踩踏风险；最终姿态正对剪刀；停在代价地图允许的最近安全位姿；任一关键数据流失后 0.5 秒内停止；未找到时返回起点并发布明确结果。
+- 验收标准：无碰墙或踩踏风险；实时检测置信度超过 90% 时停止并报告 `FOUND`；达到最小墙面间距但置信度不足时停止并报告明确失败；任一关键数据流失后停止；未找到时返回起点并发布明确结果。
 
 ## Assumptions
 

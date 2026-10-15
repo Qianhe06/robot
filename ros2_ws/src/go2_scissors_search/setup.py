@@ -39,6 +39,8 @@ setup(
         "console_scripts": [
             "time_sync_node = "
             "go2_scissors_search.time_sync_node:main",
+            "scan_filter_node = "
+            "go2_scissors_search.scan_filter_node:main",
             "odom_tf_node = "
             "go2_scissors_search.odom_tf_node:main",
             "motion_adapter_node = "
