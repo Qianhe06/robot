@@ -50,6 +50,7 @@ class ShortGoalTest(Node):
         self.motion_enabled = False
         self.last_feedback_time = 0.0
         self.command_samples = []
+        self.start_map_pose = None
         self.create_subscription(Twist, "/cmd_vel", self.command_callback, 50)
 
     def command_callback(self, message):
@@ -108,6 +109,11 @@ class ShortGoalTest(Node):
         yaw = math.atan2(
             2.0 * (rotation.w * rotation.z + rotation.x * rotation.y),
             1.0 - 2.0 * (rotation.y * rotation.y + rotation.z * rotation.z),
+        )
+        self.start_map_pose = (
+            float(transform.translation.x),
+            float(transform.translation.y),
+            float(yaw),
         )
         goal = PoseStamped()
         goal.header.frame_id = "map"
@@ -217,6 +223,29 @@ class ShortGoalTest(Node):
             )
         print("Nav2 short goal succeeded")
 
+    def verify_map_displacement(self):
+        """Let SLAM settle, then require meaningful physical displacement."""
+        print("Waiting 3 seconds for SLAM correction...")
+        deadline = time.monotonic() + 3.0
+        while rclpy.ok() and time.monotonic() < deadline:
+            rclpy.spin_once(self, timeout_sec=0.10)
+        transform = self.current_transform().transform
+        final_x = float(transform.translation.x)
+        final_y = float(transform.translation.y)
+        start_x, start_y, _ = self.start_map_pose
+        displacement = math.hypot(final_x - start_x, final_y - start_y)
+        print(
+            f"SLAM displacement: {displacement:.3f} m "
+            f"(start=({start_x:.3f}, {start_y:.3f}), "
+            f"end=({final_x:.3f}, {final_y:.3f}))"
+        )
+        minimum = max(0.10, self.distance - 0.20)
+        if displacement < minimum:
+            raise RuntimeError(
+                f"SLAM displacement {displacement:.3f} m is below "
+                f"the required {minimum:.3f} m"
+            )
+
     def print_command_summary(self):
         """Print final velocity ranges observed during a dry run."""
         nonzero = [
@@ -317,6 +346,7 @@ class ShortGoalTest(Node):
         self.set_motion(True)
         self.navigate(target)
         self.set_motion(False)
+        self.verify_map_displacement()
 
 
 def parse_args(argv):
@@ -326,8 +356,8 @@ def parse_args(argv):
     parser.add_argument("--timeout", type=float, default=25.0)
     parser.add_argument("--dry-run-seconds", type=float, default=0.0)
     arguments = parser.parse_args(argv)
-    if not 0.10 <= arguments.distance <= 0.30:
-        parser.error("distance must be between 0.10 and 0.30 metres")
+    if not 0.10 <= arguments.distance <= 0.60:
+        parser.error("distance must be between 0.10 and 0.60 metres")
     if not 5.0 <= arguments.timeout <= 30.0:
         parser.error("timeout must be between 5 and 30 seconds")
     if not 0.0 <= arguments.dry_run_seconds <= 10.0:
