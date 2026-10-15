@@ -9,6 +9,8 @@ import time
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, Twist
 from nav2_msgs.action import ComputePathToPose, NavigateToPose
+from nav2_msgs.msg import Costmap
+from nav_msgs.msg import OccupancyGrid
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -51,7 +53,29 @@ class ShortGoalTest(Node):
         self.last_feedback_time = 0.0
         self.command_samples = []
         self.start_map_pose = None
+        self.map_message = None
+        self.costmap_message = None
         self.create_subscription(Twist, "/cmd_vel", self.command_callback, 50)
+        self.create_subscription(
+            OccupancyGrid,
+            "/map",
+            self.map_callback,
+            10,
+        )
+        self.create_subscription(
+            Costmap,
+            "/global_costmap/costmap_raw",
+            self.costmap_callback,
+            10,
+        )
+
+    def map_callback(self, message):
+        """Retain the latest SLAM occupancy grid for diagnostics."""
+        self.map_message = message
+
+    def costmap_callback(self, message):
+        """Retain the latest global costmap for diagnostics."""
+        self.costmap_message = message
 
     def command_callback(self, message):
         """Record the final velocity stream received by the motion adapter."""
@@ -85,6 +109,45 @@ class ShortGoalTest(Node):
             raise RuntimeError("/go2_motion/enable unavailable")
         if not self.emergency_client.wait_for_service(timeout_sec=8.0):
             raise RuntimeError("/go2_motion/emergency_stop unavailable")
+        deadline = time.monotonic() + 6.0
+        while (
+            rclpy.ok()
+            and time.monotonic() < deadline
+            and (self.map_message is None or self.costmap_message is None)
+        ):
+            rclpy.spin_once(self, timeout_sec=0.10)
+        if self.map_message is None:
+            raise RuntimeError("/map data unavailable")
+        if self.costmap_message is None:
+            raise RuntimeError("/global_costmap/costmap_raw data unavailable")
+
+    @staticmethod
+    def grid_value(message, x, y):
+        """Return one grid value at a world coordinate or outside."""
+        if isinstance(message, OccupancyGrid):
+            metadata = message.info
+            width = int(metadata.width)
+            height = int(metadata.height)
+        else:
+            metadata = message.metadata
+            width = int(metadata.size_x)
+            height = int(metadata.size_y)
+        resolution = float(metadata.resolution)
+        origin = metadata.origin.position
+        column = math.floor((float(x) - origin.x) / resolution)
+        row = math.floor((float(y) - origin.y) / resolution)
+        if column < 0 or row < 0 or column >= width or row >= height:
+            return "outside"
+        return int(message.data[row * width + column])
+
+    def print_grid_values(self, label, x, y):
+        """Print SLAM occupancy and global cost for one world point."""
+        occupancy = self.grid_value(self.map_message, x, y)
+        cost = self.grid_value(self.costmap_message, x, y)
+        print(
+            f"Grid {label}: x={x:.3f}, y={y:.3f}, "
+            f"map={occupancy}, global_cost={cost}"
+        )
 
     def current_transform(self):
         """Return the latest map-to-base transform after a bounded wait."""
@@ -116,6 +179,11 @@ class ShortGoalTest(Node):
             float(transform.translation.y),
             float(yaw),
         )
+        self.print_grid_values(
+            "start",
+            transform.translation.x,
+            transform.translation.y,
+        )
         goal = PoseStamped()
         goal.header.frame_id = "map"
         goal.header.stamp = self.get_clock().now().to_msg()
@@ -133,6 +201,11 @@ class ShortGoalTest(Node):
             f"y={goal.pose.position.y:.3f}, "
             f"distance={self.distance:.2f} m, "
             f"heading_offset={math.degrees(yaw_offset):.0f} deg"
+        )
+        self.print_grid_values(
+            f"target {math.degrees(yaw_offset):+.0f} deg",
+            goal.pose.position.x,
+            goal.pose.position.y,
         )
         return goal
 
