@@ -96,7 +96,7 @@ def main():
         print(f"搜索终止：{error}", flush=True)
     finally:
         if rclpy.ok():
-            if started:
+            if started and not node.finished:
                 try:
                     node.set_enabled(node.search_client, False)
                 except Exception as error:
