@@ -147,7 +147,8 @@ fi
 
 echo "===== 验证 StopMove 请求 ====="
 sport_request="$(
-  timeout 8 ros2 topic echo /api/sport/request --once 2>&1 || true
+  timeout 8 ros2 topic echo /api/sport/request --once \
+    --filter 'm.header.identity.api_id == 1003' 2>&1 || true
 )"
 printf '%s\n' "$sport_request"
 if ! grep -Eq 'api_id: +1003([[:space:]]|$)' <<<"$sport_request"; then
