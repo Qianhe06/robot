@@ -3,6 +3,7 @@
 
 import argparse
 import math
+from pathlib import Path
 import sys
 import time
 
@@ -361,12 +362,18 @@ class ShortGoalTest(Node):
             return
         self.last_feedback_time = now
         remaining = message.feedback.distance_remaining
-        print(f"Distance remaining: {remaining:.3f} m")
+        recoveries = message.feedback.number_of_recoveries
+        print(
+            f"Distance remaining: {remaining:.3f} m, recoveries={recoveries}"
+        )
 
     def send_navigation_goal(self, target):
         """Send the short navigation goal and retain its handle."""
         goal = NavigateToPose.Goal()
         goal.pose = target
+        goal.behavior_tree = str(
+            Path(__file__).resolve().with_name("short_goal_no_recovery.xml")
+        )
         self.navigation_handle = self.wait_future(
             self.navigation_client.send_goal_async(
                 goal,
@@ -385,11 +392,41 @@ class ShortGoalTest(Node):
     def navigate(self, target):
         """Run the short navigation goal with a hard timeout."""
         result_future = self.send_navigation_goal(target)
-        wrapped = self.wait_future(
-            result_future,
-            self.timeout,
-            "navigation",
-        )
+        deadline = time.monotonic() + self.timeout
+        last_report = 0.0
+        while rclpy.ok() and not result_future.done():
+            now = time.monotonic()
+            if now >= deadline:
+                raise TimeoutError("navigation timeout")
+            rclpy.spin_once(self, timeout_sec=0.05)
+            # Read without a blocking TF wait while motion is enabled.
+            try:
+                transform = self.tf_buffer.lookup_transform(
+                    "map", "base_footprint", Time(),
+                ).transform
+            except TransformException:
+                raise RuntimeError("map pose unavailable during navigation")
+            x, y, yaw = self.pose_values(transform)
+            yaw_change = math.degrees(
+                self.angle_difference(yaw, self.start_map_pose[2])
+            )
+            if abs(yaw_change) > 30.0:
+                raise RuntimeError(
+                    f"straight-goal heading deviation {yaw_change:+.1f} deg "
+                    "exceeds 30 deg; stopping"
+                )
+            if now - last_report >= 1.0:
+                last_report = now
+                error = math.hypot(
+                    target.pose.position.x - x, target.pose.position.y - y,
+                )
+                print(
+                    f"Map target error={error:.3f} m, "
+                    f"heading error={yaw_change:+.1f} deg"
+                )
+        if not result_future.done():
+            raise RuntimeError("navigation interrupted")
+        wrapped = result_future.result()
         self.navigation_finished = True
         if wrapped.status != GoalStatus.STATUS_SUCCEEDED:
             raise RuntimeError(
