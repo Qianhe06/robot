@@ -2,7 +2,7 @@
 """Coordinate mapping, exploration, inspection, approach, and return home."""
 
 import math
-from pathlib import Path
+from pathlib import Path as FilePath
 
 from ament_index_python.packages import get_package_share_directory
 
@@ -52,7 +52,7 @@ class MissionManagerNode(Node):
         self.goal_pose = None
         self.motion_requested_for_goal = False
         self.navigation_tree = str(
-            Path(get_package_share_directory("go2_scissors_search"))
+            FilePath(get_package_share_directory("go2_scissors_search"))
             / "behavior_trees" / "navigate_no_recovery.xml"
         )
         self.navigation_generation = 0
