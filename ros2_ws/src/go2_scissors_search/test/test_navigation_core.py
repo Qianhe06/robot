@@ -8,6 +8,7 @@ from go2_scissors_search.mission_core import SearchMission, SearchState
 from go2_scissors_search.navigation_core import frontier_goals
 from go2_scissors_search.navigation_core import cluster_target_positions
 from go2_scissors_search.navigation_core import CostGrid
+from go2_scissors_search.navigation_core import frontier_cells
 from go2_scissors_search.navigation_core import GridMap
 from go2_scissors_search.navigation_core import inspection_goals
 from go2_scissors_search.navigation_core import local_approach_command
@@ -28,6 +29,13 @@ def test_frontier_ring_yields_spread_out_safe_goals():
     assert all(pose_is_safe(grid, goal) for goal in goals)
     assert max(goal.x for goal in goals) - min(goal.x for goal in goals) > 1.0
     assert max(goal.y for goal in goals) - min(goal.y for goal in goals) > 1.0
+
+
+def test_free_cells_at_map_boundary_remain_frontiers():
+    grid = GridMap(np.zeros((5, 5), dtype=np.int16), 5, 5, 0.1)
+
+    assert (0, 2) in frontier_cells(grid)
+    assert (2, 2) not in frontier_cells(grid)
 
 
 def test_frontier_goal_is_moved_inward_from_unknown_space():

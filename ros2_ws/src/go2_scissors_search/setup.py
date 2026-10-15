@@ -22,7 +22,7 @@ setup(
         ),
         (
             "share/" + package_name + "/config",
-            glob("config/*.yaml"),
+            glob("config/*.yaml") + glob("config/*.rviz"),
         ),
         (
             "share/" + package_name + "/behavior_trees",

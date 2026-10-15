@@ -25,7 +25,7 @@ from std_msgs.msg import Bool, Float32
 from tf2_ros import Buffer, TransformException, TransformListener
 
 from .mission_core import SearchMission, SearchState
-from .navigation_core import CostGrid, frontier_goals, GridMap
+from .navigation_core import CostGrid, frontier_cells, frontier_goals, GridMap
 from .navigation_core import inspection_goals
 from .navigation_core import local_approach_command, pose_is_safe, Pose2D
 
@@ -59,6 +59,9 @@ class MissionManagerNode(Node):
         self.scan_handle = None
         self.scan_pending = False
         self.scan_generation = 0
+        self.scan_purpose = None
+        self.initial_scan_started = False
+        self.initial_scan_completed = False
         self.visited_goals = []
         self.inspection_queue = []
         self.inspection_prepared = False
@@ -177,6 +180,7 @@ class MissionManagerNode(Node):
     def start_exploration_if_ready(self):
         if (
             self.mission.state == SearchState.MAPPING
+            and self.initial_scan_completed
             and self.grid is not None
             and self.global_cost_grid is not None
         ):
@@ -260,6 +264,8 @@ class MissionManagerNode(Node):
                 )
                 return response
             self.start_pose = pose
+            self.initial_scan_started = False
+            self.initial_scan_completed = False
             self.visited_goals.clear()
             self.inspection_queue.clear()
             self.inspection_prepared = False
@@ -274,10 +280,7 @@ class MissionManagerNode(Node):
             self.last_confidence_time = None
             self.mission.start()
             if self.grid is not None and self.global_cost_grid is not None:
-                self.mission.map_ready()
-                message = (
-                    "map and global costmap available; starting exploration"
-                )
+                message = "map ready; rotating once before exploration"
             else:
                 message = "waiting for a usable map and global costmap"
             response.success = True
@@ -480,6 +483,11 @@ class MissionManagerNode(Node):
         goals = self.filter_safe(self.filter_unvisited(goals))
         goal = self.nearest_goal(goals)
         if goal is None:
+            if frontier_cells(self.grid):
+                self.publish_status(
+                    "map remains open; no new collision-free frontier goal"
+                )
+                return
             state = self.mission.frontier_exhausted()
             if state == SearchState.INSPECTING:
                 self.prepare_inspection()
@@ -606,7 +614,7 @@ class MissionManagerNode(Node):
         elif purpose == "return":
             self.fail("unable to return to the recorded start pose")
         elif purpose == "inspection" and succeeded:
-            self.start_inspection_scan()
+            self.start_scan("inspection")
         elif not succeeded:
             self.publish_status(f"navigation failed: {purpose}")
 
@@ -625,6 +633,7 @@ class MissionManagerNode(Node):
         self.scan_generation += 1
         self.scan_handle = None
         self.scan_pending = False
+        self.scan_purpose = None
 
     def stop_local_approach(self):
         if not (self.local_mode_active or self.local_mode_pending):
@@ -802,14 +811,16 @@ class MissionManagerNode(Node):
         state = self.mission.approach_failed()
         self.publish_status(f"{reason}; state={state.value}")
 
-    def start_inspection_scan(self):
-        """Rotate once at an inspection pose so the detector sees the wall."""
+    def start_scan(self, purpose):
+        """Rotate once in place for the initial map or wall inspection."""
         if not self.spinner.server_is_ready():
-            self.get_logger().warning("Nav2 spin action is unavailable")
-            return
+            if purpose == "inspection":
+                self.get_logger().warning("Nav2 spin action is unavailable")
+            return False
         goal = Spin.Goal()
         goal.target_yaw = 2.0 * math.pi
         goal.time_allowance.sec = 30
+        self.scan_purpose = purpose
         self.scan_pending = True
         self.motion_requested_for_goal = False
         self.scan_generation += 1
@@ -818,6 +829,7 @@ class MissionManagerNode(Node):
         future.add_done_callback(
             lambda result: self.scan_goal_response(result, generation)
         )
+        return True
 
     def scan_goal_response(self, future, generation):
         if generation != self.scan_generation:
@@ -832,10 +844,16 @@ class MissionManagerNode(Node):
         try:
             handle = future.result()
         except Exception as error:
-            self.get_logger().warning(f"inspection scan failed: {error}")
+            if self.scan_purpose == "initial":
+                self.fail(f"initial map scan failed: {error}")
+            else:
+                self.get_logger().warning(f"inspection scan failed: {error}")
             return
         if not handle.accepted:
-            self.get_logger().warning("inspection scan was rejected")
+            if self.scan_purpose == "initial":
+                self.fail("initial map scan was rejected")
+            else:
+                self.get_logger().warning("inspection scan was rejected")
             return
         self.scan_handle = handle
         result_future = handle.get_result_async()
@@ -846,15 +864,26 @@ class MissionManagerNode(Node):
     def scan_goal_result(self, future, generation):
         if generation != self.scan_generation:
             return
+        purpose = self.scan_purpose
         try:
             wrapped = future.result()
-            if wrapped.status != GoalStatus.STATUS_SUCCEEDED:
+            succeeded = wrapped.status == GoalStatus.STATUS_SUCCEEDED
+            if not succeeded and purpose != "initial":
                 self.get_logger().warning("inspection scan did not complete")
         except Exception as error:
-            self.get_logger().warning(f"inspection scan failed: {error}")
+            succeeded = False
+            if purpose != "initial":
+                self.get_logger().warning(f"inspection scan failed: {error}")
         self.scan_handle = None
+        self.scan_purpose = None
         self.motion_requested_for_goal = False
         self.request_motion(False)
+        if purpose == "initial":
+            if not succeeded:
+                self.fail("initial map scan did not complete")
+                return
+            self.initial_scan_completed = True
+            self.start_exploration_if_ready()
 
     def begin_target_selection(self):
         """Use the confirmed target directly; mapping plans only the search."""
@@ -920,7 +949,15 @@ class MissionManagerNode(Node):
             or self.scan_pending
         ):
             return
-        if self.mission.state == SearchState.EXPLORING:
+        if self.mission.state == SearchState.MAPPING:
+            if (
+                self.global_cost_grid is not None
+                and not self.initial_scan_started
+                and self.start_scan("initial")
+            ):
+                self.initial_scan_started = True
+                self.publish_status("rotating once to complete initial map")
+        elif self.mission.state == SearchState.EXPLORING:
             self.dispatch_exploration()
         elif self.mission.state == SearchState.INSPECTING:
             if not self.inspection_prepared:

@@ -574,6 +574,7 @@ class ScissorsRGBLidar(Node):
         marker.color.g = 0.05
         marker.color.b = 0.05
         marker.color.a = 1.0
+        marker.lifetime.sec = 1
         self.marker_pub.publish(marker)
 
         if confirmation is not None:

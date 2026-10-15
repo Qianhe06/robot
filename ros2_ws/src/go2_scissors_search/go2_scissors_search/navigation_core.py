@@ -132,7 +132,10 @@ def frontier_cells(grid, free_threshold=25):
         for column in range(grid.width):
             if not grid.is_free(row, column, free_threshold):
                 continue
-            if any(
+            if (
+                row == 0 or row == grid.height - 1
+                or column == 0 or column == grid.width - 1
+            ) or any(
                 grid.data[other] < 0
                 for other in _neighbours(
                     row,

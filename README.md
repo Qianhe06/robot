@@ -1,6 +1,6 @@
 # Go2 自主寻找墙上剪刀
 
-本项目在 Unitree Go2 上运行 ROS 2 Humble、SLAM Toolbox 和 Nav2。机器人先执行前沿探索，再沿已建地图中的墙面生成观察位姿巡检；确认墙上剪刀后，在近距离用 Go2 原生避障接口缓慢接近。实时 YOLO 剪刀检测置信度超过 90% 时停车并报告找到目标。未找到目标时返回任务起点。
+本项目在 Unitree Go2 上运行 ROS 2 Humble、SLAM Toolbox 和 Nav2。任务启动后先原地旋转一圈补充 2D 地图，再导航到可到达的未建图区域边缘。地图没有开放的前沿后，机器人沿已建地图中的墙面生成观察位姿巡检；确认墙上剪刀后，在近距离用 Go2 原生避障接口缓慢接近。实时 YOLO 剪刀检测置信度超过 90% 时停车并报告找到目标。未找到目标时返回任务起点。
 
 ## 环境与构建
 
@@ -48,6 +48,20 @@ ros2 launch go2_scissors_search autonomy.launch.py
 ```bash
 ros2 service call /scissors_search/enable std_srvs/srv/SetBool "{data: true}"
 ```
+
+启动任务会调用 Nav2 的 Spin 动作原地转 360°，成功后才开始前沿探索；Spin 失败会停止任务。地图仍有未知边界、但没有新的安全前沿目标时，状态会报告 `map remains open` 并等待地图变化，不会误报建图完成。只有已建自由区域不再接壤未知区域时，才转入墙面巡检。受遮挡或不可到达的区域可能无法仅靠自主行走形成封闭地图。
+
+## RViz 地图与目标
+
+保持自主系统运行，在另一个终端打开项目提供的 RViz 配置：
+
+```bash
+PROJECT="$HOME/桌面/robot/detection"
+source "$PROJECT/activate_go2.bash"
+rviz2 -d "$PROJECT/ros2_ws/src/go2_scissors_search/config/scissors_mapping.rviz"
+```
+
+固定坐标系为 `map`。灰色/黑色区域显示 `/map` 的 2D 地图；`Go2 position` 的坐标轴来自实时 `map → base_footprint` TF；`Scissors position` 用红点显示 `/scissors/marker` 的最近一次剪刀候选位置。候选停止更新 1 秒后红点消失；经过多帧确认的地图坐标仍可在 `/scissors/target_pose` 查看。可在 RViz 的 Displays 面板查看各显示项状态。
 
 任务管理器会显式调用 `/go2_motion/enable`。运动适配器通过 Go2 官方
 `/api/obstacles_avoid/request` 接口发送 API 1004 选择 API 指令源、API 1001
