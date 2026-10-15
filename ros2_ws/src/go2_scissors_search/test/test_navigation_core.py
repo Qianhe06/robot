@@ -79,7 +79,7 @@ def test_standoff_moves_away_until_footprint_is_safe():
     )
 
     assert pose is not None
-    assert pose.x <= -0.55 + 1e-9
+    assert pose.x <= -0.53 + 1e-9
     assert pose_is_safe(grid, pose)
     assert pose.yaw == 0.0
 

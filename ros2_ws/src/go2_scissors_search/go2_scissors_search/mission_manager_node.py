@@ -35,8 +35,8 @@ class MissionManagerNode(Node):
         self.declare_parameter("frontier_min_cells", 8)
         self.declare_parameter("goal_separation", 0.50)
         self.declare_parameter("inspection_spacing", 0.80)
-        self.declare_parameter("robot_length", 0.80)
-        self.declare_parameter("robot_width", 0.52)
+        self.declare_parameter("robot_length", 0.76)
+        self.declare_parameter("robot_width", 0.34)
         self.declare_parameter("safety_inflation", 0.15)
 
         self.mission = SearchMission()

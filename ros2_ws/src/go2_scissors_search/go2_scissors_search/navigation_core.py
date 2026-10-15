@@ -188,8 +188,8 @@ def frontier_goals(
     grid,
     min_cluster_cells=5,
     free_threshold=25,
-    robot_length=0.80,
-    robot_width=0.52,
+    robot_length=0.76,
+    robot_width=0.34,
     inflation=0.15,
     max_standoff=2.0,
 ):
@@ -242,8 +242,8 @@ def inspection_goals(
     spacing=0.80,
     free_threshold=25,
     occupied_threshold=65,
-    robot_length=0.80,
-    robot_width=0.52,
+    robot_length=0.76,
+    robot_width=0.34,
     inflation=0.15,
 ):
     """Sample free poses along mapped obstacle boundaries facing the wall."""
@@ -299,8 +299,8 @@ def inspection_goals(
 def pose_is_safe(
     grid,
     pose,
-    robot_length=0.80,
-    robot_width=0.52,
+    robot_length=0.76,
+    robot_width=0.34,
     inflation=0.15,
     free_threshold=25,
 ):
@@ -342,8 +342,8 @@ def nearest_safe_standoff(
     max_distance=2.0,
     step=0.05,
     reachable_mask=None,
-    robot_length=0.80,
-    robot_width=0.52,
+    robot_length=0.76,
+    robot_width=0.34,
     inflation=0.15,
 ):
     """Find the closest collision-free pose on the wall's free-space side."""

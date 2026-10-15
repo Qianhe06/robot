@@ -205,6 +205,22 @@ class ShortGoalTest(Node):
                 f"(cost={cost}; 253-255 are forbidden)"
             )
 
+    def require_safe_start(self):
+        """Refuse motion when the robot already occupies a collision cell."""
+        start_x, start_y, _ = self.start_map_pose
+        occupancy = self.grid_value(self.map_message, start_x, start_y)
+        cost = self.grid_value(self.costmap_message, start_x, start_y)
+        if not isinstance(occupancy, int) or not 0 <= occupancy < 25:
+            raise RuntimeError(
+                f"robot start is not known free space (map={occupancy})"
+            )
+        if not isinstance(cost, int) or cost >= 253:
+            raise RuntimeError(
+                "robot start is not traversable in the global costmap "
+                f"(cost={cost}; reposition or restart with the corrected "
+                "footprint)"
+            )
+
     def current_transform(self):
         """Return the latest map-to-base transform after a bounded wait."""
         deadline = time.monotonic() + 8.0
@@ -307,6 +323,8 @@ class ShortGoalTest(Node):
             offset = math.radians(offset_degrees)
             target = self.make_goal(offset)
             try:
+                if self.dry_run_seconds <= 0.0:
+                    self.require_safe_start()
                 self.require_safe_target(target)
                 self.plan(target)
                 return target
