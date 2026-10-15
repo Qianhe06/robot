@@ -3,16 +3,18 @@
 
 from collections import Counter
 import math
+import sys
 import time
 
 from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid
+from sensor_msgs.msg import LaserScan
 import numpy as np
 import rclpy
 from rcl_interfaces.srv import GetParameters
 from rclpy.duration import Duration
 from rclpy.node import Node
-from rclpy.qos import DurabilityPolicy, QoSProfile
+from rclpy.qos import DurabilityPolicy, QoSProfile, qos_profile_sensor_data
 from rclpy.time import Time
 from tf2_ros import Buffer, TransformException, TransformListener
 
@@ -27,6 +29,10 @@ class ExplorationDiagnostic(Node):
         super().__init__("go2_exploration_diagnostic")
         self.map_message = None
         self.costmap_message = None
+        self.scan_message = None
+        self.map_count = 0
+        self.map_changed_count = 0
+        self.scan_count = 0
         map_qos = QoSProfile(depth=1)
         map_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
         self.create_subscription(
@@ -36,6 +42,10 @@ class ExplorationDiagnostic(Node):
             Costmap, "/global_costmap/costmap_raw",
             self.costmap_callback, 10,
         )
+        self.create_subscription(
+            LaserScan, "/scan", self.scan_callback,
+            qos_profile_sensor_data,
+        )
         self.parameters_client = self.create_client(
             GetParameters,
             "/scissors_search_manager/get_parameters",
@@ -44,10 +54,26 @@ class ExplorationDiagnostic(Node):
         self.tf_listener = TransformListener(self.tf_buffer, self)
 
     def map_callback(self, message):
+        previous = self.map_message
+        old_origin = previous.info.origin.position if previous else None
+        new_origin = message.info.origin.position
+        if previous is not None and (
+            previous.info.width != message.info.width
+            or previous.info.height != message.info.height
+            or old_origin.x != new_origin.x
+            or old_origin.y != new_origin.y
+            or previous.data != message.data
+        ):
+            self.map_changed_count += 1
         self.map_message = message
+        self.map_count += 1
 
     def costmap_callback(self, message):
         self.costmap_message = message
+
+    def scan_callback(self, message):
+        self.scan_message = message
+        self.scan_count += 1
 
     def wait_for(self, ready, description, timeout=10.0):
         deadline = time.monotonic() + timeout
@@ -176,12 +202,56 @@ class ExplorationDiagnostic(Node):
         )
         print(f"mapped_safe_inspection_poses={len(inspection)}")
 
+    def watch(self, duration=10.0):
+        self.wait_for(
+            lambda: self.map_message is not None
+            and self.scan_message is not None,
+            "map or scan",
+        )
+        start_pose = self.robot_pose()
+        start_maps = self.map_count
+        start_changes = self.map_changed_count
+        start_scans = self.scan_count
+        deadline = time.monotonic() + duration
+        print(f"观察 {duration:.0f} 秒：请让机器狗正常行走。", flush=True)
+        while rclpy.ok() and time.monotonic() < deadline:
+            rclpy.spin_once(self, timeout_sec=0.1)
+        end_pose = self.robot_pose()
+        distance = math.hypot(
+            end_pose.x - start_pose.x,
+            end_pose.y - start_pose.y,
+        )
+        yaw_change = math.atan2(
+            math.sin(end_pose.yaw - start_pose.yaw),
+            math.cos(end_pose.yaw - start_pose.yaw),
+        )
+        finite = sum(
+            math.isfinite(value) for value in self.scan_message.ranges
+        )
+        print(
+            f"/scan: {self.scan_count - start_scans} 帧，"
+            f"最后一帧有效测距 {finite}/{len(self.scan_message.ranges)}"
+        )
+        print(
+            f"map->base_footprint: 位移 {distance:.3f} 米，"
+            f"转角 {math.degrees(yaw_change):.1f} 度"
+        )
+        print(
+            f"/map: {self.map_count - start_maps} 帧，"
+            f"内容变化 {self.map_changed_count - start_changes} 次"
+        )
+
 
 def main():
-    rclpy.init()
+    if len(sys.argv) > 2 or (len(sys.argv) == 2 and sys.argv[1] != "--watch"):
+        raise SystemExit("用法: diagnose_exploration.py [--watch]")
+    rclpy.init(args=[])
     node = ExplorationDiagnostic()
     try:
-        node.report()
+        if len(sys.argv) == 2:
+            node.watch()
+        else:
+            node.report()
     finally:
         node.destroy_node()
         if rclpy.ok():
