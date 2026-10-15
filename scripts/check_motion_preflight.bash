@@ -65,12 +65,9 @@ grep -q 'Translation:' <<<"$tf_output" || \
   fail "map -> base_footprint TF 不可用"
 
 echo "===== Nav2 action ====="
-actions="$(ros2 action list 2>&1 || true)"
-printf '%s\n' "$actions"
-grep -qx '/navigate_to_pose' <<<"$actions" || \
-  fail "/navigate_to_pose 不可用"
-grep -qx '/compute_path_to_pose' <<<"$actions" || \
-  fail "/compute_path_to_pose 不可用"
+if ! /usr/bin/python3 "${project_root}/scripts/check_nav2_actions.py"; then
+  fail "Nav2 导航或路径规划 action 不可用"
+fi
 
 echo "===== Unitree 原生避障状态 ====="
 obstacle_response="$(
