@@ -51,6 +51,13 @@ def test_cost_grid_rejects_inscribed_lethal_unknown_and_outside():
     assert not grid.pose_is_traversable(Pose2D(5.5, 0.5, 0.0))
 
 
+def test_footprint_near_map_edge_uses_rectangle_not_bounding_circle():
+    grid = GridMap(np.zeros((40, 40), dtype=np.int16), 40, 40, 0.05)
+
+    assert pose_is_safe(grid, Pose2D(1.0, 0.58, math.pi / 2))
+    assert not pose_is_safe(grid, Pose2D(1.0, 0.40, math.pi / 2))
+
+
 def test_inspection_goals_face_obstacle_and_respect_spacing():
     data = np.zeros((40, 40), dtype=np.int16)
     data[:, 20] = 100

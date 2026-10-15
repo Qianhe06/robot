@@ -315,6 +315,13 @@ def pose_is_safe(
 
     cosine = math.cos(pose.yaw)
     sine = math.sin(pose.yaw)
+    for local_x in (-half_length, half_length):
+        for local_y in (-half_width, half_width):
+            x = pose.x + cosine * local_x - sine * local_y
+            y = pose.y + sine * local_x + cosine * local_y
+            if grid.world_to_cell(x, y) is None:
+                return False
+
     center_row, center_column = center
     for row in range(center_row - row_range, center_row + row_range + 1):
         for column in range(
@@ -322,7 +329,7 @@ def pose_is_safe(
             center_column + row_range + 1,
         ):
             if not (0 <= row < grid.height and 0 <= column < grid.width):
-                return False
+                continue
             x, y = grid.cell_to_world(row, column)
             delta_x = x - pose.x
             delta_y = y - pose.y
