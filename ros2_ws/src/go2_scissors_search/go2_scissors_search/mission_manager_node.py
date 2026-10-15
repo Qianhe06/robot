@@ -672,6 +672,7 @@ class MissionManagerNode(Node):
         self.path_candidates.clear()
         self.path_results.clear()
         parameter = self.get_parameter
+        rejections = []
         for target, free_normal in self.target_candidates:
             standoff = nearest_safe_standoff(
                 self.grid,
@@ -681,13 +682,26 @@ class MissionManagerNode(Node):
                 robot_width=parameter("robot_width").value,
                 inflation=parameter("safety_inflation").value,
             )
-            if (
-                standoff is not None
-                and self.navigation_goal_is_safe(standoff)
-            ):
+            if standoff is None:
+                rejections.append(
+                    f"target ({target[0]:.2f}, {target[1]:.2f}): "
+                    "no footprint-safe pose in mapped free space"
+                )
+            elif not self.navigation_goal_is_safe(standoff):
+                cost = self.global_cost_grid.cost_at(
+                    standoff.x, standoff.y
+                )
+                rejections.append(
+                    f"standoff ({standoff.x:.2f}, {standoff.y:.2f}): "
+                    f"global cost={cost}"
+                )
+            else:
                 self.path_candidates.append((standoff, target))
         if not self.path_candidates:
-            self.target_selection_failed("no collision-free target pose")
+            detail = "; ".join(rejections[:3]) or "no confirmed target"
+            self.target_selection_failed(
+                f"no collision-free target pose; {detail}"
+            )
             return
         if not self.path_planner.server_is_ready():
             self.target_selection_failed("Nav2 path planner unavailable")
