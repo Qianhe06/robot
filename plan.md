@@ -8,7 +8,7 @@
 
 - 建立 `go2_scissors_search` ROS2 包，统一提供 SLAM、Nav2、目标定位、区域探索、任务管理和 Unitree 运动适配的 launch/config。
 - 使用 `/utlidar/cloud_base` 经高度过滤和 `pointcloud_to_laserscan` 生成 `/scan_raw`，过滤机身轮廓内回波后以 `/scan` 供 SLAM 和 Nav2 使用；发布 `/utlidar/robot_odom` 对应的 `odom → base_link` TF，由 `slam_toolbox` 产生 `map → odom`。
-- 使用 Nav2 的全局规划和局部代价地图；按 `0.70 × 0.28 m` 实测机身及不超过 `0.03 m` 的测量误差，将 footprint 设为 `0.76 × 0.34 m`、额外膨胀 `0.15 m`；速度上限 `0.25 m/s`、角速度上限 `0.40 rad/s`。
+- 使用 Nav2 的全局规划和局部代价地图；按 `0.70 × 0.28 m` 实测机身及不超过 `0.03 m` 的测量误差，将 footprint 设为 `0.76 × 0.34 m`。探索目标的地图足迹额外留 `0.05 m`，Nav2 障碍膨胀保持 `0.15 m`；速度上限 `0.25 m/s`、角速度上限 `0.40 rad/s`。
 - 实现 `cmd_vel` 适配节点：
   - 启动时通过 `/api/obstacles_avoid/request` 启用远程 API 和避障。
   - 将 Nav2 速度以避障接口 `Move(mode=0)`、20 Hz 发送。
