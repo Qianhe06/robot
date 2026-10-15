@@ -63,7 +63,8 @@ def generate_launch_description():
             parameters=[{
                 "target_frame": "base_footprint",
                 "transform_tolerance": 0.05,
-                "min_height": -0.10,
+                # Exclude floor returns in the ground-level base_footprint frame.
+                "min_height": 0.08,
                 "max_height": 0.50,
                 "angle_min": -3.14159265,
                 "angle_max": 3.14159265,

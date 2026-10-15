@@ -19,8 +19,6 @@ unset COLCON_PREFIX_PATH
 unset PYTHONPATH
 source "${project_root}/activate_go2.bash"
 
-original_goal_tolerance=""
-
 cleanup() {
   trap - EXIT
   set +e
@@ -28,11 +26,7 @@ cleanup() {
     std_srvs/srv/Trigger '{}' >/dev/null 2>&1
   timeout 5 ros2 service call /go2_motion/enable \
     std_srvs/srv/SetBool '{data: false}' >/dev/null 2>&1
-  if [[ -n "$original_goal_tolerance" ]]; then
-    timeout 5 ros2 param set /controller_server \
-      goal_checker.xy_goal_tolerance "$original_goal_tolerance" \
-      >/dev/null 2>&1
-  fi
+
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
@@ -44,13 +38,14 @@ timeout 8 ros2 service call /scissors_search/enable \
 echo "===== 重新执行运动前检查 ====="
 bash "${project_root}/scripts/check_motion_preflight.bash"
 
-echo "===== 临时收紧到点容差 ====="
-original_goal_tolerance="$(
-  ros2 param get /controller_server goal_checker.xy_goal_tolerance \
-    | awk '{print $NF}'
-)"
-echo "原始到点容差：${original_goal_tolerance} 米"
-ros2 param set /controller_server goal_checker.xy_goal_tolerance 0.04
+echo "===== 验证控制器容差一致 ====="
+for parameter in goal_checker.xy_goal_tolerance FollowPath.xy_goal_tolerance; do
+  value="$(ros2 param get /controller_server "$parameter" | awk '{print $NF}')"
+  if [[ "$value" != "0.04" ]]; then
+    echo "$parameter=$value；请重新构建并重启自主系统，加载统一的 0.04 米容差。" >&2
+    exit 1
+  fi
+done
 
 echo "===== Nav2 正前方 0.25 米目标测试 ====="
 /usr/bin/python3 "${project_root}/scripts/nav2_short_goal_test.py" \
