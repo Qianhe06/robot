@@ -2,10 +2,13 @@
 """Coordinate mapping, exploration, inspection, approach, and return home."""
 
 import math
+from pathlib import Path
+
+from ament_index_python.packages import get_package_share_directory
 
 from action_msgs.msg import GoalStatus
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
-from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
+from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped, Twist
 from nav2_msgs.action import ComputePathToPose, NavigateToPose, Spin
 from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid, Path
@@ -47,6 +50,11 @@ class MissionManagerNode(Node):
         self.goal_pending = False
         self.goal_purpose = None
         self.goal_pose = None
+        self.motion_requested_for_goal = False
+        self.navigation_tree = str(
+            Path(get_package_share_directory("go2_scissors_search"))
+            / "behavior_trees" / "navigate_no_recovery.xml"
+        )
         self.navigation_generation = 0
         self.scan_handle = None
         self.scan_pending = False
@@ -97,6 +105,7 @@ class MissionManagerNode(Node):
             10,
         )
         self.create_subscription(OccupancyGrid, "/map", self.map_callback, 10)
+        self.create_subscription(Twist, "/cmd_vel", self.velocity_callback, 10)
         self.create_subscription(
             Costmap,
             "/global_costmap/costmap_raw",
@@ -156,7 +165,6 @@ class MissionManagerNode(Node):
             and self.global_cost_grid is not None
         ):
             self.mission.map_ready()
-            self.request_motion(True)
             self.publish_status(
                 "map and global costmap available; starting exploration"
             )
@@ -178,6 +186,16 @@ class MissionManagerNode(Node):
             1.0 - 2.0 * (rotation.y * rotation.y + rotation.z * rotation.z),
         )
         return Pose2D(translation.x, translation.y, yaw)
+
+    def velocity_callback(self, message):
+        """Enable motion only after the accepted goal produces commands."""
+        del message
+        if (
+            (self.goal_handle is not None or self.scan_handle is not None)
+            and not self.motion_requested_for_goal
+        ):
+            self.motion_requested_for_goal = True
+            self.request_motion(True)
 
     @staticmethod
     def pose_message(pose, stamp):
@@ -241,7 +259,6 @@ class MissionManagerNode(Node):
             self.mission.start()
             if self.grid is not None and self.global_cost_grid is not None:
                 self.mission.map_ready()
-                self.request_motion(True)
                 message = (
                     "map and global costmap available; starting exploration"
                 )
@@ -305,8 +322,6 @@ class MissionManagerNode(Node):
             self.stationary_ready_time = now + 0.20
             self.reset_confirmation_window()
             self.publish_status("target moved; stopped for reconfirmation")
-            if state == SearchState.EXPLORING:
-                self.request_motion(True)
             return
 
         if self.mission.state in (
@@ -493,8 +508,10 @@ class MissionManagerNode(Node):
             return False
         goal = NavigateToPose.Goal()
         goal.pose = self.pose_message(pose, self.get_clock().now().to_msg())
+        goal.behavior_tree = self.navigation_tree
         self.goal_purpose = purpose
         self.goal_pose = pose
+        self.motion_requested_for_goal = False
         self.goal_pending = True
         self.navigation_generation += 1
         generation = self.navigation_generation
@@ -537,6 +554,7 @@ class MissionManagerNode(Node):
         except Exception:
             succeeded = False
         self.goal_handle = None
+        self.motion_requested_for_goal = False
         self.navigation_finished(succeeded)
 
     def navigation_finished(self, succeeded):
@@ -544,6 +562,8 @@ class MissionManagerNode(Node):
         goal_pose = self.goal_pose
         self.goal_purpose = None
         self.goal_pose = None
+        self.motion_requested_for_goal = False
+        self.request_motion(False)
         if purpose in ("frontier", "inspection") and goal_pose is not None:
             self.visited_goals.append(goal_pose)
 
@@ -575,6 +595,7 @@ class MissionManagerNode(Node):
         self.goal_pending = False
         self.goal_purpose = None
         self.goal_pose = None
+        self.motion_requested_for_goal = False
         if self.scan_handle is not None:
             self.scan_handle.cancel_goal_async()
         self.scan_generation += 1
@@ -590,6 +611,7 @@ class MissionManagerNode(Node):
         goal.target_yaw = 2.0 * math.pi
         goal.time_allowance.sec = 30
         self.scan_pending = True
+        self.motion_requested_for_goal = False
         self.scan_generation += 1
         generation = self.scan_generation
         future = self.spinner.send_goal_async(goal)
@@ -631,6 +653,8 @@ class MissionManagerNode(Node):
         except Exception as error:
             self.get_logger().warning(f"inspection scan failed: {error}")
         self.scan_handle = None
+        self.motion_requested_for_goal = False
+        self.request_motion(False)
 
     @staticmethod
     def path_length(path):
@@ -699,7 +723,6 @@ class MissionManagerNode(Node):
                 self.request_motion(False)
                 self.target_selection_failed("target pose is not traversable")
                 return
-            self.request_motion(True)
             self.publish_status("approaching target with shortest Nav2 path")
             return
 
@@ -755,8 +778,6 @@ class MissionManagerNode(Node):
         self.stationary_ready_time = None
         self.target_selection_started = False
         state = self.mission.approach_failed()
-        if state == SearchState.EXPLORING:
-            self.request_motion(True)
         self.publish_status(f"{reason}; state={state.value}")
 
     def fail(self, reason):
@@ -839,8 +860,6 @@ class MissionManagerNode(Node):
             self.confirmation_deadline = None
             self.stationary_ready_time = None
             state = self.mission.approach_failed()
-            if state == SearchState.EXPLORING:
-                self.request_motion(True)
             self.publish_status(
                 f"target confirmation timed out; {state.value}"
             )
