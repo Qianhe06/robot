@@ -4,6 +4,14 @@ set -eo pipefail
 project_root="$(
   cd "$(dirname "${BASH_SOURCE[0]}")/.." >/dev/null 2>&1 && pwd
 )"
+log_dir="${project_root}/logs/runtime"
+mkdir -p "$log_dir"
+log_file="${log_dir}/autonomy_$(date +%Y%m%d_%H%M%S)_$$.log"
+exec > >(tee -a "$log_file") 2>&1
+echo "运行日志：$log_file"
+export PYTHONUNBUFFERED=1
+export ROS_LOG_DIR="${log_dir}/ros"
+
 model_path="${project_root}/yolo26x.pt"
 
 if [[ ! -s "$model_path" ]]; then

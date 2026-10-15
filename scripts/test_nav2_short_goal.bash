@@ -13,6 +13,13 @@ if [[ "${1:-}" != "--clear-path-confirmed" ]]; then
   exit 2
 fi
 
+log_dir="${project_root}/logs/runtime"
+mkdir -p "$log_dir"
+log_file="${log_dir}/short_goal_$(date +%Y%m%d_%H%M%S)_$$.log"
+exec > >(tee -a "$log_file") 2>&1
+echo "运行日志：$log_file"
+export PYTHONUNBUFFERED=1
+
 unset AMENT_PREFIX_PATH
 unset CMAKE_PREFIX_PATH
 unset COLCON_PREFIX_PATH

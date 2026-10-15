@@ -394,6 +394,7 @@ class ShortGoalTest(Node):
         result_future = self.send_navigation_goal(target)
         deadline = time.monotonic() + self.timeout
         last_report = 0.0
+        previous_pose = None
         while rclpy.ok() and not result_future.done():
             now = time.monotonic()
             if now >= deadline:
@@ -407,6 +408,15 @@ class ShortGoalTest(Node):
             except TransformException:
                 raise RuntimeError("map pose unavailable during navigation")
             x, y, yaw = self.pose_values(transform)
+            if previous_pose is not None:
+                old_time, old_x, old_y = previous_pose
+                step = math.hypot(x - old_x, y - old_y)
+                if now - old_time <= 0.25 and step > 0.15:
+                    raise RuntimeError(
+                        f"map pose jumped {step:.3f} m in "
+                        f"{now - old_time:.3f} s; stopping before correction"
+                    )
+            previous_pose = (now, x, y)
             yaw_change = math.degrees(
                 self.angle_difference(yaw, self.start_map_pose[2])
             )
@@ -551,15 +561,6 @@ class ShortGoalTest(Node):
 
     def emergency_stop(self):
         """Cancel an active goal and request the latched motion stop."""
-        if self.navigation_handle is not None and not self.navigation_finished:
-            try:
-                self.wait_future(
-                    self.navigation_handle.cancel_goal_async(),
-                    3.0,
-                    "goal cancellation",
-                )
-            except Exception as error:
-                print(f"Goal cancellation warning: {error}", file=sys.stderr)
         if self.emergency_client.service_is_ready():
             try:
                 response = self.wait_future(
@@ -582,6 +583,15 @@ class ShortGoalTest(Node):
                 )
             except Exception as error:
                 print(f"Motion disable warning: {error}", file=sys.stderr)
+        if self.navigation_handle is not None and not self.navigation_finished:
+            try:
+                self.wait_future(
+                    self.navigation_handle.cancel_goal_async(),
+                    3.0,
+                    "goal cancellation",
+                )
+            except Exception as error:
+                print(f"Goal cancellation warning: {error}", file=sys.stderr)
         self.motion_enabled = False
 
     def run(self):
