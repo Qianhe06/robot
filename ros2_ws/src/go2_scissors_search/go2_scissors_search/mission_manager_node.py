@@ -79,7 +79,6 @@ class MissionManagerNode(Node):
         self.local_progress_time = None
         self.local_best_distance = None
         self.last_candidate_time = None
-        self.last_target_time = None
         self.last_state = None
         self.last_status_detail = "ready; search disabled"
         self.last_status_level = DiagnosticStatus.OK
@@ -272,7 +271,6 @@ class MissionManagerNode(Node):
             self.path_results.clear()
             self.active_target_position = None
             self.last_candidate_time = None
-            self.last_target_time = None
             self.mission.start()
             if self.grid is not None and self.global_cost_grid is not None:
                 self.mission.map_ready()
@@ -320,7 +318,6 @@ class MissionManagerNode(Node):
         free_normal = np.array([math.cos(yaw), math.sin(yaw)])
         now = self.get_clock().now().nanoseconds * 1e-9
         self.last_candidate_time = now
-        self.last_target_time = now
 
         if self.mission.state == SearchState.APPROACHING:
             if (
@@ -713,14 +710,18 @@ class MissionManagerNode(Node):
         if not self.local_mode_active:
             return
         now = self.get_clock().now().nanoseconds * 1e-9
-        pose = self.current_pose()
+        if now - self.local_start_time > 10.0:
+            self.local_approach_failed("local approach timed out")
+            return
         if (
-            pose is None
-            or self.last_target_time is None
-            or now - self.last_target_time > 1.0
-            or now - self.local_start_time > 10.0
+            self.last_candidate_time is None
+            or now - self.last_candidate_time > 1.5
         ):
-            self.local_approach_failed("local target or pose lost/timed out")
+            self.local_approach_failed("scissors no longer visible")
+            return
+        pose = self.current_pose()
+        if pose is None:
+            self.local_approach_failed("map pose unavailable")
             return
         command = local_approach_command(
             pose, self.local_target, self.local_normal
@@ -994,6 +995,7 @@ class MissionManagerNode(Node):
         now = self.get_clock().now().nanoseconds * 1e-9
         if (
             self.mission.state == SearchState.APPROACHING
+            and not (self.local_mode_active or self.local_mode_pending)
             and self.last_candidate_time is not None
             and now - self.last_candidate_time > 1.0
         ):
