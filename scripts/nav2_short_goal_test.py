@@ -206,19 +206,24 @@ class ShortGoalTest(Node):
             )
 
     def require_safe_start(self):
-        """Refuse motion when the robot already occupies a collision cell."""
+        """Allow an unobserved start cell, but reject explicit obstacles."""
         start_x, start_y, _ = self.start_map_pose
         occupancy = self.grid_value(self.map_message, start_x, start_y)
         cost = self.grid_value(self.costmap_message, start_x, start_y)
-        if not isinstance(occupancy, int) or not 0 <= occupancy < 25:
+        if not isinstance(occupancy, int) or not -1 <= occupancy < 25:
             raise RuntimeError(
-                f"robot start is not known free space (map={occupancy})"
+                f"robot start is occupied or outside the map (map={occupancy})"
             )
-        if not isinstance(cost, int) or cost >= 253:
+        if not isinstance(cost, int) or not 0 <= cost <= 255:
+            raise RuntimeError(f"robot start has invalid global cost: {cost}")
+        if cost in (253, 254):
             raise RuntimeError(
-                "robot start is not traversable in the global costmap "
-                f"(cost={cost}; reposition or restart with the corrected "
-                "footprint)"
+                f"robot start overlaps a mapped obstacle (cost={cost})"
+            )
+        if occupancy == -1 or cost == 255:
+            print(
+                "Start cell is unobserved; deferring start clearance to Nav2. "
+                "Target must still be known free space."
             )
 
     def current_transform(self):
