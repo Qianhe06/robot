@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Safely adapt Nav2 velocity commands to Unitree obstacle avoidance."""
+"""Safely adapt navigation or local target commands to Unitree avoidance."""
 
 import itertools
 
@@ -51,6 +51,7 @@ class MotionAdapterNode(Node):
         )
         self.request_ids = itertools.count(1)
         self.last_stop_reason = None
+        self.local_mode = False
 
         self.obstacle_request_pub = self.create_publisher(
             Request,
@@ -63,6 +64,9 @@ class MotionAdapterNode(Node):
             10,
         )
         self.create_subscription(Twist, "/cmd_vel", self.cmd_callback, 10)
+        self.create_subscription(
+            Twist, "/cmd_vel_target", self.local_cmd_callback, 10
+        )
         self.create_subscription(
             Odometry,
             "/sensors/odom_synced",
@@ -97,6 +101,11 @@ class MotionAdapterNode(Node):
             SetBool,
             "/go2_motion/enable",
             self.enable_callback,
+        )
+        self.create_service(
+            SetBool,
+            "/go2_motion/local_mode",
+            self.local_mode_callback,
         )
         self.create_service(
             Trigger,
@@ -146,6 +155,16 @@ class MotionAdapterNode(Node):
         self.mark_stream("interface")
 
     def cmd_callback(self, message):
+        if self.local_mode:
+            return
+        self.accept_command(message)
+
+    def local_cmd_callback(self, message):
+        if not self.local_mode:
+            return
+        self.accept_command(message)
+
+    def accept_command(self, message):
         command = VelocityCommand(
             x=message.linear.x,
             y=message.linear.y,
@@ -155,6 +174,18 @@ class MotionAdapterNode(Node):
             self.safety.set_command(command, self.now_seconds())
         except ValueError as error:
             self.safety.emergency_stop(f"invalid velocity command: {error}")
+
+    def local_mode_callback(self, request, response):
+        if self.local_mode != request.data:
+            self.safety.disable("velocity source changed")
+            self.publish_stop("velocity source changed")
+            self.local_mode = request.data
+        response.success = True
+        response.message = (
+            "local target commands selected" if self.local_mode
+            else "Nav2 commands selected"
+        )
+        return response
 
     def enable_callback(self, request, response):
         if request.data:

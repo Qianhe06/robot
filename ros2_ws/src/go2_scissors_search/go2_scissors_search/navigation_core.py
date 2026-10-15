@@ -76,6 +76,32 @@ class CostGrid(GridMap):
         return cost is not None and cost < int(lethal_threshold)
 
 
+def local_approach_command(pose, target, free_normal):
+    """Return a bounded forward command, or None outside the near approach."""
+    dx = float(target[0]) - pose.x
+    dy = float(target[1]) - pose.y
+    distance = math.hypot(dx, dy)
+    if distance < 0.60 or distance > 1.25:
+        return None
+    normal = np.asarray(free_normal, dtype=np.float64)[:2]
+    if np.linalg.norm(normal) < 0.9:
+        return None
+    # The robot must be on the measured free side of the wall.
+    if (-dx * normal[0] - dy * normal[1]) / distance < 0.75:
+        return None
+    heading = math.atan2(dy, dx) - pose.yaw
+    heading = math.atan2(math.sin(heading), math.cos(heading))
+    if abs(heading) > math.radians(35):
+        return None
+    if distance <= 0.68:
+        if abs(heading) <= math.radians(15):
+            return 0.0, 0.0, True
+        return 0.0, max(-0.12, min(0.12, 0.8 * heading)), False
+    forward = min(0.08, max(0.025, 0.5 * (distance - 0.68)))
+    turn = max(-0.12, min(0.12, 0.8 * heading))
+    return forward, turn, False
+
+
 def _neighbours(row, column, height, width, diagonals=False):
     offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     if diagonals:

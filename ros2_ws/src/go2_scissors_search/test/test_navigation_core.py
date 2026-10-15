@@ -10,6 +10,7 @@ from go2_scissors_search.navigation_core import cluster_target_positions
 from go2_scissors_search.navigation_core import CostGrid
 from go2_scissors_search.navigation_core import GridMap
 from go2_scissors_search.navigation_core import inspection_goals
+from go2_scissors_search.navigation_core import local_approach_command
 from go2_scissors_search.navigation_core import nearest_safe_standoff
 from go2_scissors_search.navigation_core import pose_is_safe
 from go2_scissors_search.navigation_core import Pose2D
@@ -140,3 +141,39 @@ def test_mission_reconfirms_then_resumes_search_after_failures():
 
     assert mission.approach_failed() == SearchState.CONFIRMING
     assert mission.approach_failed() == SearchState.EXPLORING
+
+
+def test_local_approach_accepts_snapshot_target_and_stops_at_standoff():
+    target = [0.017, -0.810]
+    normal = [0.071, -0.997]
+    pose = Pose2D(0.275, -1.656, math.radians(97.7))
+
+    forward, turn, reached = local_approach_command(
+        pose, target, normal
+    )
+
+    assert 0.0 < forward <= 0.08
+    assert abs(turn) <= 0.12
+    assert not reached
+    assert local_approach_command(
+        Pose2D(0.10, -1.47, math.radians(97.7)), target, normal
+    ) == (0.0, 0.0, True)
+    forward, turn, reached = local_approach_command(
+        Pose2D(0.10, -1.47, math.radians(72)), target, normal
+    )
+    assert forward == 0.0 and turn > 0.0 and not reached
+
+
+def test_local_approach_rejects_wrong_side_heading_and_distance():
+    target = [0.0, 0.0]
+    normal = [-1.0, 0.0]
+
+    assert local_approach_command(
+        Pose2D(0.9, 0.0, math.pi), target, normal
+    ) is None
+    assert local_approach_command(
+        Pose2D(-0.9, 0.0, math.pi / 2), target, normal
+    ) is None
+    assert local_approach_command(
+        Pose2D(-1.5, 0.0, 0.0), target, normal
+    ) is None

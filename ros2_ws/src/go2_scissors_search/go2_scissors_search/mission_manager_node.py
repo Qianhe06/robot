@@ -27,7 +27,7 @@ from tf2_ros import Buffer, TransformException, TransformListener
 from .mission_core import SearchMission, SearchState
 from .navigation_core import CostGrid, frontier_goals, GridMap
 from .navigation_core import inspection_goals, nearest_safe_standoff
-from .navigation_core import pose_is_safe, Pose2D
+from .navigation_core import local_approach_command, pose_is_safe, Pose2D
 
 
 class MissionManagerNode(Node):
@@ -70,7 +70,16 @@ class MissionManagerNode(Node):
         self.path_candidates = []
         self.path_results = []
         self.active_target_position = None
+        self.local_target = None
+        self.local_normal = None
+        self.local_mode_pending = False
+        self.local_mode_active = False
+        self.local_generation = 0
+        self.local_start_time = None
+        self.local_progress_time = None
+        self.local_best_distance = None
         self.last_candidate_time = None
+        self.last_target_time = None
         self.last_state = None
         self.last_status_detail = "ready; search disabled"
         self.last_status_level = DiagnosticStatus.OK
@@ -85,6 +94,9 @@ class MissionManagerNode(Node):
         )
         self.spinner = ActionClient(self, Spin, "spin")
         self.motion_client = self.create_client(SetBool, "/go2_motion/enable")
+        self.local_mode_client = self.create_client(
+            SetBool, "/go2_motion/local_mode"
+        )
         latched_qos = QoSProfile(depth=1)
         latched_qos.durability = DurabilityPolicy.TRANSIENT_LOCAL
         latched_qos.reliability = ReliabilityPolicy.RELIABLE
@@ -103,6 +115,9 @@ class MissionManagerNode(Node):
             Bool,
             "/scissors/confirmation_reset",
             10,
+        )
+        self.local_cmd_pub = self.create_publisher(
+            Twist, "/cmd_vel_target", 10
         )
         self.create_subscription(OccupancyGrid, "/map", self.map_callback, 10)
         self.create_subscription(Twist, "/cmd_vel", self.velocity_callback, 10)
@@ -130,6 +145,7 @@ class MissionManagerNode(Node):
             self.enable_callback,
         )
         self.create_timer(1.0, self.tick)
+        self.create_timer(0.10, self.local_approach_tick)
         self.create_timer(1.0, self.republish_status)
         self.publish_status("ready; search disabled")
 
@@ -256,6 +272,7 @@ class MissionManagerNode(Node):
             self.path_results.clear()
             self.active_target_position = None
             self.last_candidate_time = None
+            self.last_target_time = None
             self.mission.start()
             if self.grid is not None and self.global_cost_grid is not None:
                 self.mission.map_ready()
@@ -303,6 +320,7 @@ class MissionManagerNode(Node):
         free_normal = np.array([math.cos(yaw), math.sin(yaw)])
         now = self.get_clock().now().nanoseconds * 1e-9
         self.last_candidate_time = now
+        self.last_target_time = now
 
         if self.mission.state == SearchState.APPROACHING:
             if (
@@ -311,10 +329,13 @@ class MissionManagerNode(Node):
                     target - self.active_target_position
                 ) <= 0.25
             ):
+                if self.local_mode_active or self.local_mode_pending:
+                    self.local_target = target
+                    self.local_normal = free_normal
                 return
             self.cancel_navigation()
             self.request_motion(False)
-            state = self.mission.approach_failed()
+            self.mission.approach_failed()
             self.target_candidates.clear()
             self.target_selection_started = False
             self.target_collection_deadline = None
@@ -588,6 +609,7 @@ class MissionManagerNode(Node):
             self.publish_status(f"navigation failed: {purpose}")
 
     def cancel_navigation(self):
+        self.stop_local_approach()
         self.navigation_generation += 1
         if self.goal_handle is not None:
             self.goal_handle.cancel_goal_async()
@@ -601,6 +623,142 @@ class MissionManagerNode(Node):
         self.scan_generation += 1
         self.scan_handle = None
         self.scan_pending = False
+
+    def stop_local_approach(self):
+        if not (self.local_mode_active or self.local_mode_pending):
+            return
+        self.local_generation += 1
+        self.local_cmd_pub.publish(Twist())
+        self.local_mode_pending = False
+        self.local_mode_active = False
+        self.local_target = None
+        self.local_normal = None
+        request = SetBool.Request()
+        request.data = False
+        if self.local_mode_client.service_is_ready():
+            self.local_mode_client.call_async(request)
+
+    def begin_local_approach(self):
+        current = self.current_pose()
+        if current is None:
+            return False
+        nearby = []
+        for target, normal in self.target_candidates:
+            command = local_approach_command(current, target, normal)
+            if command is not None:
+                distance = math.hypot(
+                    target[0] - current.x, target[1] - current.y
+                )
+                nearby.append((distance, target, normal))
+        if not nearby or not self.local_mode_client.service_is_ready():
+            return False
+        _, target, normal = min(nearby, key=lambda item: item[0])
+        self.local_target = target
+        self.local_normal = normal
+        self.active_target_position = target
+        self.local_mode_pending = True
+        self.local_generation += 1
+        generation = self.local_generation
+        request = SetBool.Request()
+        request.data = True
+        future = self.local_mode_client.call_async(request)
+        future.add_done_callback(
+            lambda result: self.local_mode_response(result, generation)
+        )
+        self.publish_status(
+            "no mapped parking pose; selecting Go2 native avoidance "
+            "for nearby confirmed target"
+        )
+        return True
+
+    def local_mode_response(self, future, generation):
+        try:
+            response = future.result()
+        except Exception as error:
+            if generation == self.local_generation:
+                self.stop_local_approach()
+                self.target_selection_failed(
+                    f"local mode request failed: {error}"
+                )
+            return
+        if generation != self.local_generation:
+            if response.success and not (
+                self.local_mode_active or self.local_mode_pending
+            ):
+                request = SetBool.Request()
+                request.data = False
+                self.local_mode_client.call_async(request)
+            return
+        self.local_mode_pending = False
+        if not response.success:
+            self.target_selection_failed(
+                f"local mode rejected: {response.message}"
+            )
+            return
+        self.local_mode_active = True
+        self.target_candidates.clear()
+        self.target_collection_deadline = None
+        self.confirmation_deadline = None
+        self.stationary_ready_time = None
+        self.target_selection_started = False
+        self.mission.target_confirmed()
+        now = self.get_clock().now().nanoseconds * 1e-9
+        self.local_start_time = now
+        self.local_progress_time = now
+        self.local_best_distance = math.inf
+        self.request_motion(True)
+        self.publish_status("approaching with Go2 native avoidance")
+
+    def local_approach_tick(self):
+        if not self.local_mode_active:
+            return
+        now = self.get_clock().now().nanoseconds * 1e-9
+        pose = self.current_pose()
+        if (
+            pose is None
+            or self.last_target_time is None
+            or now - self.last_target_time > 1.0
+            or now - self.local_start_time > 10.0
+        ):
+            self.local_approach_failed("local target or pose lost/timed out")
+            return
+        command = local_approach_command(
+            pose, self.local_target, self.local_normal
+        )
+        if command is None:
+            self.local_approach_failed(
+                "local target is outside the near, forward, free-side corridor"
+            )
+            return
+        distance = math.hypot(
+            self.local_target[0] - pose.x,
+            self.local_target[1] - pose.y,
+        )
+        if distance < self.local_best_distance - 0.03:
+            self.local_best_distance = distance
+            self.local_progress_time = now
+        if now - self.local_progress_time > 4.0:
+            self.local_approach_failed("local approach made no progress")
+            return
+        forward, turn, reached = command
+        if reached:
+            self.request_motion(False)
+            self.stop_local_approach()
+            self.mission.target_reached()
+            self.publish_status(
+                f"target reached with native avoidance; range={distance:.2f} m"
+            )
+            return
+        message = Twist()
+        message.linear.x = forward
+        message.angular.z = turn
+        self.local_cmd_pub.publish(message)
+
+    def local_approach_failed(self, reason):
+        self.cancel_navigation()
+        self.request_motion(False)
+        state = self.mission.approach_failed()
+        self.publish_status(f"{reason}; state={state.value}")
 
     def start_inspection_scan(self):
         """Rotate once at an inspection pose so the detector sees the wall."""
@@ -699,6 +857,8 @@ class MissionManagerNode(Node):
                 self.path_candidates.append((standoff, target))
         if not self.path_candidates:
             detail = "; ".join(rejections[:3]) or "no confirmed target"
+            if self.begin_local_approach():
+                return
             self.target_selection_failed(
                 f"no collision-free target pose; {detail}"
             )
