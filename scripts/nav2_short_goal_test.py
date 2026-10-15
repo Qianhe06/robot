@@ -10,7 +10,7 @@ from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, Twist
 from nav2_msgs.action import ComputePathToPose, NavigateToPose
 from nav2_msgs.msg import Costmap
-from nav_msgs.msg import OccupancyGrid
+from nav_msgs.msg import OccupancyGrid, Odometry
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.node import Node
@@ -53,9 +53,17 @@ class ShortGoalTest(Node):
         self.last_feedback_time = 0.0
         self.command_samples = []
         self.start_map_pose = None
+        self.start_odom_pose = None
+        self.latest_odom_pose = None
         self.map_message = None
         self.costmap_message = None
         self.create_subscription(Twist, "/cmd_vel", self.command_callback, 50)
+        self.create_subscription(
+            Odometry,
+            "/sensors/odom_synced",
+            self.odom_callback,
+            50,
+        )
         self.create_subscription(
             OccupancyGrid,
             "/map",
@@ -87,6 +95,31 @@ class ShortGoalTest(Node):
         if len(self.command_samples) > 2000:
             del self.command_samples[:1000]
 
+    @staticmethod
+    def pose_values(pose):
+        """Return planar position and yaw from a ROS pose."""
+        if hasattr(pose, "position"):
+            position = pose.position
+            orientation = pose.orientation
+        else:
+            position = pose.translation
+            orientation = pose.rotation
+        yaw = math.atan2(
+            2.0 * (
+                orientation.w * orientation.z
+                + orientation.x * orientation.y
+            ),
+            1.0 - 2.0 * (
+                orientation.y * orientation.y
+                + orientation.z * orientation.z
+            ),
+        )
+        return float(position.x), float(position.y), float(yaw)
+
+    def odom_callback(self, message):
+        """Retain Unitree odometry independently of SLAM corrections."""
+        self.latest_odom_pose = self.pose_values(message.pose.pose)
+
     def wait_future(self, future, timeout, description):
         """Spin until a future completes or raise a descriptive timeout."""
         deadline = time.monotonic() + float(timeout)
@@ -113,13 +146,19 @@ class ShortGoalTest(Node):
         while (
             rclpy.ok()
             and time.monotonic() < deadline
-            and (self.map_message is None or self.costmap_message is None)
+            and (
+                self.map_message is None
+                or self.costmap_message is None
+                or self.latest_odom_pose is None
+            )
         ):
             rclpy.spin_once(self, timeout_sec=0.10)
         if self.map_message is None:
             raise RuntimeError("/map data unavailable")
         if self.costmap_message is None:
             raise RuntimeError("/global_costmap/costmap_raw data unavailable")
+        if self.latest_odom_pose is None:
+            raise RuntimeError("/sensors/odom_synced data unavailable")
 
     @staticmethod
     def grid_value(message, x, y):
@@ -195,6 +234,7 @@ class ShortGoalTest(Node):
             float(transform.translation.y),
             float(yaw),
         )
+        self.start_odom_pose = self.latest_odom_pose
         self.print_grid_values(
             "start",
             transform.translation.x,
@@ -357,7 +397,7 @@ class ShortGoalTest(Node):
             )
 
     def print_command_summary(self):
-        """Print final velocity ranges observed during a dry run."""
+        """Print velocity ranges observed during navigation."""
         nonzero = [
             sample for sample in self.command_samples
             if any(abs(value) > 1e-4 for value in sample)
@@ -385,6 +425,45 @@ class ShortGoalTest(Node):
                 break
         print(f"First distinct commands: {unique_samples}")
 
+    @staticmethod
+    def angle_difference(final, initial):
+        """Return the signed shortest angular displacement."""
+        return math.atan2(
+            math.sin(float(final) - float(initial)),
+            math.cos(float(final) - float(initial)),
+        )
+
+    def print_pose_diagnostics(self):
+        """Compare SLAM and Unitree odometry after the robot is stopped."""
+        if self.start_map_pose is None or self.start_odom_pose is None:
+            return
+        deadline = time.monotonic() + 0.5
+        while rclpy.ok() and time.monotonic() < deadline:
+            rclpy.spin_once(self, timeout_sec=0.05)
+        transform = self.current_transform().transform
+        map_final = self.pose_values(transform)
+        odom_final = self.latest_odom_pose
+
+        def print_delta(label, start, final):
+            displacement = math.hypot(final[0] - start[0], final[1] - start[1])
+            yaw_change = math.degrees(
+                self.angle_difference(final[2], start[2])
+            )
+            print(
+                f"{label}: displacement={displacement:.3f} m, "
+                f"yaw_change={yaw_change:+.1f} deg, "
+                f"start=({start[0]:.3f}, {start[1]:.3f}), "
+                f"end=({final[0]:.3f}, {final[1]:.3f})"
+            )
+
+        print("===== Navigation diagnostics =====")
+        print_delta("SLAM map pose", self.start_map_pose, map_final)
+        print_delta("Unitree odom", self.start_odom_pose, odom_final)
+        try:
+            self.print_command_summary()
+        except RuntimeError as error:
+            print(f"Command diagnostics: {error}")
+
     def dry_run(self, target):
         """Collect Nav2 output while the motion adapter remains disabled."""
         self.set_motion(False)
@@ -408,7 +487,6 @@ class ShortGoalTest(Node):
             )
             print("Dry-run goal cancelled as planned")
         self.navigation_finished = True
-        self.print_command_summary()
 
     def emergency_stop(self):
         """Cancel an active goal and request the latched motion stop."""
@@ -495,6 +573,7 @@ def main(argv=None):
     finally:
         if rclpy.ok():
             node.emergency_stop()
+            node.print_pose_diagnostics()
         node.destroy_node()
         if rclpy.ok():
             rclpy.shutdown()
