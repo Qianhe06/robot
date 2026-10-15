@@ -7,6 +7,7 @@ from action_msgs.msg import GoalStatus
 from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus, KeyValue
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
 from nav2_msgs.action import ComputePathToPose, NavigateToPose, Spin
+from nav2_msgs.msg import Costmap
 from nav_msgs.msg import OccupancyGrid, Path
 import numpy as np
 import rclpy
@@ -21,8 +22,9 @@ from std_msgs.msg import Bool
 from tf2_ros import Buffer, TransformException, TransformListener
 
 from .mission_core import SearchMission, SearchState
-from .navigation_core import frontier_goals, GridMap, inspection_goals
-from .navigation_core import nearest_safe_standoff, Pose2D
+from .navigation_core import CostGrid, frontier_goals, GridMap
+from .navigation_core import inspection_goals, nearest_safe_standoff
+from .navigation_core import pose_is_safe, Pose2D
 
 
 class MissionManagerNode(Node):
@@ -39,6 +41,7 @@ class MissionManagerNode(Node):
 
         self.mission = SearchMission()
         self.grid = None
+        self.global_cost_grid = None
         self.start_pose = None
         self.goal_handle = None
         self.goal_pending = False
@@ -95,6 +98,12 @@ class MissionManagerNode(Node):
         )
         self.create_subscription(OccupancyGrid, "/map", self.map_callback, 10)
         self.create_subscription(
+            Costmap,
+            "/global_costmap/costmap_raw",
+            self.costmap_callback,
+            10,
+        )
+        self.create_subscription(
             PoseWithCovarianceStamped,
             "/scissors/target_pose",
             self.target_callback,
@@ -125,10 +134,32 @@ class MissionManagerNode(Node):
             origin.x,
             origin.y,
         )
-        if self.mission.state == SearchState.MAPPING:
+        self.start_exploration_if_ready()
+
+    def costmap_callback(self, message):
+        metadata = message.metadata
+        origin = metadata.origin.position
+        self.global_cost_grid = CostGrid(
+            message.data,
+            metadata.size_x,
+            metadata.size_y,
+            metadata.resolution,
+            origin.x,
+            origin.y,
+        )
+        self.start_exploration_if_ready()
+
+    def start_exploration_if_ready(self):
+        if (
+            self.mission.state == SearchState.MAPPING
+            and self.grid is not None
+            and self.global_cost_grid is not None
+        ):
             self.mission.map_ready()
             self.request_motion(True)
-            self.publish_status("map available; starting frontier exploration")
+            self.publish_status(
+                "map and global costmap available; starting exploration"
+            )
 
     def current_pose(self):
         try:
@@ -208,12 +239,14 @@ class MissionManagerNode(Node):
             self.active_target_position = None
             self.last_candidate_time = None
             self.mission.start()
-            if self.grid is not None:
+            if self.grid is not None and self.global_cost_grid is not None:
                 self.mission.map_ready()
                 self.request_motion(True)
-                message = "map available; starting frontier exploration"
+                message = (
+                    "map and global costmap available; starting exploration"
+                )
             else:
-                message = "mapping and waiting for a usable map"
+                message = "waiting for a usable map and global costmap"
             response.success = True
             response.message = "search started"
             self.publish_status(message)
@@ -360,6 +393,22 @@ class MissionManagerNode(Node):
             )
         ]
 
+    def navigation_goal_is_safe(self, goal):
+        """Require known footprint clearance and a traversable Nav2 cell."""
+        if self.grid is None or self.global_cost_grid is None:
+            return False
+        parameter = self.get_parameter
+        return pose_is_safe(
+            self.grid,
+            goal,
+            robot_length=parameter("robot_length").value,
+            robot_width=parameter("robot_width").value,
+            inflation=parameter("safety_inflation").value,
+        ) and self.global_cost_grid.pose_is_traversable(goal)
+
+    def filter_safe(self, goals):
+        return [goal for goal in goals if self.navigation_goal_is_safe(goal)]
+
     def nearest_goal(self, goals):
         current = self.current_pose()
         if current is None or not goals:
@@ -373,11 +422,15 @@ class MissionManagerNode(Node):
         )
 
     def dispatch_exploration(self):
+        parameter = self.get_parameter
         goals = frontier_goals(
             self.grid,
-            min_cluster_cells=self.get_parameter("frontier_min_cells").value,
+            min_cluster_cells=parameter("frontier_min_cells").value,
+            robot_length=parameter("robot_length").value,
+            robot_width=parameter("robot_width").value,
+            inflation=parameter("safety_inflation").value,
         )
-        goals = self.filter_unvisited(goals)
+        goals = self.filter_safe(self.filter_unvisited(goals))
         goal = self.nearest_goal(goals)
         if goal is None:
             state = self.mission.frontier_exhausted()
@@ -396,6 +449,7 @@ class MissionManagerNode(Node):
             inflation=self.get_parameter("safety_inflation").value,
         )
         self.inspection_queue = self.filter_unvisited(self.inspection_queue)
+        self.inspection_queue = self.filter_safe(self.inspection_queue)
         self.inspection_prepared = True
         path = Path()
         path.header.stamp = self.get_clock().now().to_msg()
@@ -410,12 +464,15 @@ class MissionManagerNode(Node):
         )
 
     def dispatch_inspection(self):
+        self.inspection_queue = self.filter_safe(self.inspection_queue)
         if not self.inspection_queue:
             self.mission.inspection_complete()
             if self.start_pose is None:
                 self.fail("start pose unavailable for return")
                 return
-            self.send_navigation_goal(self.start_pose, "return")
+            if not self.send_navigation_goal(self.start_pose, "return"):
+                self.fail("recorded start pose is no longer collision-free")
+                return
             self.publish_status("inspection complete; returning to start")
             return
         goal = self.nearest_goal(self.inspection_queue)
@@ -424,10 +481,16 @@ class MissionManagerNode(Node):
 
     def send_navigation_goal(self, pose, purpose):
         if self.goal_handle is not None or self.goal_pending:
-            return
+            return False
+        if not self.navigation_goal_is_safe(pose):
+            self.get_logger().warning(
+                f"Rejected unsafe {purpose} goal at "
+                f"({pose.x:.3f}, {pose.y:.3f})"
+            )
+            return False
         if not self.navigator.server_is_ready():
             self.get_logger().warning("Nav2 navigate_to_pose is unavailable")
-            return
+            return False
         goal = NavigateToPose.Goal()
         goal.pose = self.pose_message(pose, self.get_clock().now().to_msg())
         self.goal_purpose = purpose
@@ -439,6 +502,7 @@ class MissionManagerNode(Node):
         future.add_done_callback(
             lambda result: self.goal_response(result, generation)
         )
+        return True
 
     def goal_response(self, future, generation):
         try:
@@ -593,7 +657,10 @@ class MissionManagerNode(Node):
                 robot_width=parameter("robot_width").value,
                 inflation=parameter("safety_inflation").value,
             )
-            if standoff is not None:
+            if (
+                standoff is not None
+                and self.navigation_goal_is_safe(standoff)
+            ):
                 self.path_candidates.append((standoff, target))
         if not self.path_candidates:
             self.target_selection_failed("no collision-free target pose")
@@ -608,8 +675,17 @@ class MissionManagerNode(Node):
             if not self.path_results:
                 self.target_selection_failed("no target pose has a valid path")
                 return
+            safe_results = [
+                result for result in self.path_results
+                if self.navigation_goal_is_safe(result[1])
+            ]
+            if not safe_results:
+                self.target_selection_failed(
+                    "target poses became unsafe before approach"
+                )
+                return
             _, best_pose, best_target = min(
-                self.path_results,
+                safe_results,
                 key=lambda item: item[0],
             )
             self.target_candidates.clear()
@@ -619,8 +695,11 @@ class MissionManagerNode(Node):
             self.target_selection_started = False
             self.active_target_position = best_target
             self.mission.target_confirmed()
+            if not self.send_navigation_goal(best_pose, "approach"):
+                self.request_motion(False)
+                self.target_selection_failed("target pose is not traversable")
+                return
             self.request_motion(True)
-            self.send_navigation_goal(best_pose, "approach")
             self.publish_status("approaching target with shortest Nav2 path")
             return
 

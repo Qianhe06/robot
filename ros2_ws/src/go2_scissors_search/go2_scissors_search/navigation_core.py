@@ -60,6 +60,22 @@ class GridMap:
         return 0 <= self.data[row, column] < free_threshold
 
 
+class CostGrid(GridMap):
+    """A Nav2 cost grid with point-cost safety queries."""
+
+    def cost_at(self, x, y):
+        """Return the cost at a world coordinate or ``None`` outside."""
+        cell = self.world_to_cell(x, y)
+        if cell is None:
+            return None
+        return int(self.data[cell])
+
+    def pose_is_traversable(self, pose, lethal_threshold=253):
+        """Reject inscribed, lethal, unknown, and out-of-grid poses."""
+        cost = self.cost_at(pose.x, pose.y)
+        return cost is not None and cost < int(lethal_threshold)
+
+
 def _neighbours(row, column, height, width, diagonals=False):
     offsets = [(-1, 0), (1, 0), (0, -1), (0, 1)]
     if diagonals:
@@ -115,8 +131,69 @@ def _connected_components(cells, height, width):
     return components
 
 
-def frontier_goals(grid, min_cluster_cells=5, free_threshold=25):
-    """Return one representative pose for each frontier cluster."""
+def _safe_frontier_pose(
+    grid,
+    frontier_row,
+    frontier_column,
+    frontier_yaw,
+    free_threshold,
+    robot_length,
+    robot_width,
+    inflation,
+    max_standoff,
+):
+    """Move a frontier target inward until the full footprint is safe."""
+    frontier_x, frontier_y = grid.cell_to_world(
+        frontier_row,
+        frontier_column,
+    )
+    search_cells = math.ceil(float(max_standoff) / grid.resolution)
+    candidates = []
+    for row in range(
+        max(0, frontier_row - search_cells),
+        min(grid.height, frontier_row + search_cells + 1),
+    ):
+        for column in range(
+            max(0, frontier_column - search_cells),
+            min(grid.width, frontier_column + search_cells + 1),
+        ):
+            if not grid.is_free(row, column, free_threshold):
+                continue
+            distance = math.hypot(
+                row - frontier_row,
+                column - frontier_column,
+            )
+            candidates.append((distance, row, column))
+
+    for _, row, column in sorted(candidates):
+        x, y = grid.cell_to_world(row, column)
+        if row == frontier_row and column == frontier_column:
+            yaw = frontier_yaw
+        else:
+            yaw = math.atan2(frontier_y - y, frontier_x - x)
+        pose = Pose2D(float(x), float(y), yaw)
+        if pose_is_safe(
+            grid,
+            pose,
+            robot_length=robot_length,
+            robot_width=robot_width,
+            inflation=inflation,
+            free_threshold=free_threshold,
+        ):
+            return pose
+    return None
+
+
+def frontier_goals(
+    grid,
+    min_cluster_cells=5,
+    free_threshold=25,
+    robot_length=0.80,
+    robot_width=0.52,
+    inflation=0.15,
+    max_standoff=2.0,
+):
+    """Return footprint-safe poses facing each frontier cluster."""
     cells = frontier_cells(grid, free_threshold)
     goals = []
     for component in _connected_components(cells, grid.height, grid.width):
@@ -144,8 +221,19 @@ def frontier_goals(grid, min_cluster_cells=5, free_threshold=25):
                 unknown_center[0] - row,
                 unknown_center[1] - column,
             )
-        x, y = grid.cell_to_world(row, column)
-        goals.append(Pose2D(x=float(x), y=float(y), yaw=yaw))
+        pose = _safe_frontier_pose(
+            grid,
+            row,
+            column,
+            yaw,
+            free_threshold,
+            robot_length,
+            robot_width,
+            inflation,
+            max_standoff,
+        )
+        if pose is not None:
+            goals.append(pose)
     return goals
 
 

@@ -149,6 +149,22 @@ class ShortGoalTest(Node):
             f"map={occupancy}, global_cost={cost}"
         )
 
+    def require_safe_target(self, target):
+        """Reject a target inside occupied or non-traversable map cells."""
+        x = target.pose.position.x
+        y = target.pose.position.y
+        occupancy = self.grid_value(self.map_message, x, y)
+        cost = self.grid_value(self.costmap_message, x, y)
+        if not isinstance(occupancy, int) or not 0 <= occupancy < 25:
+            raise RuntimeError(
+                f"target is not known free space (map={occupancy})"
+            )
+        if not isinstance(cost, int) or cost >= 253:
+            raise RuntimeError(
+                "target is not traversable in the global costmap "
+                f"(cost={cost}; 253-255 are forbidden)"
+            )
+
     def current_transform(self):
         """Return the latest map-to-base transform after a bounded wait."""
         deadline = time.monotonic() + 8.0
@@ -250,6 +266,7 @@ class ShortGoalTest(Node):
             offset = math.radians(offset_degrees)
             target = self.make_goal(offset)
             try:
+                self.require_safe_target(target)
                 self.plan(target)
                 return target
             except Exception as error:

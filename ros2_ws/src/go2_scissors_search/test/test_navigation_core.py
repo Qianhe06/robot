@@ -7,22 +7,48 @@ import numpy as np
 from go2_scissors_search.mission_core import SearchMission, SearchState
 from go2_scissors_search.navigation_core import frontier_goals
 from go2_scissors_search.navigation_core import cluster_target_positions
+from go2_scissors_search.navigation_core import CostGrid
 from go2_scissors_search.navigation_core import GridMap
 from go2_scissors_search.navigation_core import inspection_goals
 from go2_scissors_search.navigation_core import nearest_safe_standoff
 from go2_scissors_search.navigation_core import pose_is_safe
+from go2_scissors_search.navigation_core import Pose2D
 
 
 def test_frontier_cells_form_one_representative_goal():
-    data = np.full((10, 10), -1, dtype=np.int16)
-    data[2:8, 2:8] = 0
-    grid = GridMap(data, 10, 10, 0.1)
+    data = np.full((40, 40), -1, dtype=np.int16)
+    data[5:35, 5:35] = 0
+    grid = GridMap(data, 40, 40, 0.1)
 
     goals = frontier_goals(grid, min_cluster_cells=4)
 
     assert len(goals) == 1
-    assert 0.2 <= goals[0].x <= 0.8
-    assert 0.2 <= goals[0].y <= 0.8
+    assert pose_is_safe(grid, goals[0])
+
+
+def test_frontier_goal_is_moved_inward_from_unknown_space():
+    data = np.full((50, 50), -1, dtype=np.int16)
+    data[5:45, 5:45] = 0
+    grid = GridMap(data, 50, 50, 0.1)
+
+    goal = frontier_goals(grid, min_cluster_cells=4)[0]
+    row, column = grid.world_to_cell(goal.x, goal.y)
+
+    assert 10 <= row <= 39
+    assert 10 <= column <= 39
+    assert pose_is_safe(grid, goal)
+
+
+def test_cost_grid_rejects_inscribed_lethal_unknown_and_outside():
+    costs = np.array([[0, 252, 253, 254, 255]], dtype=np.int16)
+    grid = CostGrid(costs, 5, 1, 1.0)
+
+    assert grid.pose_is_traversable(Pose2D(0.5, 0.5, 0.0))
+    assert grid.pose_is_traversable(Pose2D(1.5, 0.5, 0.0))
+    assert not grid.pose_is_traversable(Pose2D(2.5, 0.5, 0.0))
+    assert not grid.pose_is_traversable(Pose2D(3.5, 0.5, 0.0))
+    assert not grid.pose_is_traversable(Pose2D(4.5, 0.5, 0.0))
+    assert not grid.pose_is_traversable(Pose2D(5.5, 0.5, 0.0))
 
 
 def test_inspection_goals_face_obstacle_and_respect_spacing():

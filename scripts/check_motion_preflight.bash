@@ -72,13 +72,24 @@ grep -qx '/navigate_to_pose' <<<"$actions" || \
 grep -qx '/compute_path_to_pose' <<<"$actions" || \
   fail "/compute_path_to_pose 不可用"
 
-echo "===== Unitree 避障接口响应 ====="
+echo "===== Unitree 原生避障状态 ====="
 obstacle_response="$(
-  timeout 8 ros2 topic echo /api/obstacles_avoid/response --once 2>&1 || true
+  (
+    sleep 0.5
+    ros2 topic pub --once /api/obstacles_avoid/request \
+      unitree_api/msg/Request \
+      '{header: {identity: {id: 91002, api_id: 1002}}}' \
+      >/dev/null 2>&1
+  ) &
+  timeout 8 ros2 topic echo /api/obstacles_avoid/response --once \
+    --filter 'm.header.identity.api_id == 1002' 2>&1 || true
 )"
 printf '%s\n' "$obstacle_response"
 if ! grep -Eq 'code: +0([[:space:]]|$)' <<<"$obstacle_response"; then
   fail "未收到 Unitree 避障接口的成功响应"
+fi
+if ! grep -Eq 'enable[^a-zA-Z]*(true|True)' <<<"$obstacle_response"; then
+  fail "Unitree 原生避障没有报告 enable=true"
 fi
 
 echo "===== 运动前检查结果 ====="

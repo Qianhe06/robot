@@ -49,7 +49,12 @@ ros2 launch go2_scissors_search autonomy.launch.py
 ros2 service call /scissors_search/enable std_srvs/srv/SetBool "{data: true}"
 ```
 
-任务管理器会显式调用 `/go2_motion/enable`。运动适配器仅在全部数据流新鲜时接受启用，并以 20 Hz 将 Nav2 的 `/cmd_vel` 转成 Unitree 避障 `Move(mode=0)` 请求。线速度限制为 `0.25 m/s`，角速度限制为 `0.40 rad/s`。
+任务管理器会显式调用 `/go2_motion/enable`。运动适配器通过 Go2 官方
+`/api/obstacles_avoid/request` 接口发送 API 1004 选择 API 指令源、API 1001
+开启原生避障，并以 20 Hz 将 Nav2 的 `/cmd_vel` 转成 API 1003
+`Move(mode=0)` 请求。Go2 原生避障负责实时局部避障，Nav2 负责全局路径和终点
+可达性；正式任务会拒绝全局代价为 253–255 的目标。线速度限制为
+`0.25 m/s`，角速度限制为 `0.40 rad/s`。
 
 停止任务或急停：
 
