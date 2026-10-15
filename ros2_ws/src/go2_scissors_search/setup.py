@@ -32,7 +32,7 @@ setup(
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="user",
-    maintainer_email="user@localhost",
+    maintainer_email="qianhe06@users.noreply.github.com",
     description="Go2 autonomous scissors search",
     license="Apache-2.0",
     entry_points={
