@@ -243,8 +243,8 @@ class ShortGoalTest(Node):
         print(f"Path accepted: {len(poses)} poses, {path_length:.3f} m")
 
     def select_plannable_goal(self):
-        """Try a narrow forward fan and return the first reachable target."""
-        offsets = (0.0, 15.0, -15.0, 30.0, -30.0, 45.0, -45.0)
+        """Require a reachable target directly ahead of the robot."""
+        offsets = (0.0,)
         failures = []
         for offset_degrees in offsets:
             offset = math.radians(offset_degrees)
@@ -256,9 +256,7 @@ class ShortGoalTest(Node):
                 failures.append(f"{offset_degrees:+.0f} deg: {error}")
                 print(f"Candidate rejected: {failures[-1]}")
         details = "; ".join(failures)
-        raise RuntimeError(
-            f"no reachable test target in forward fan: {details}"
-        )
+        raise RuntimeError(f"no reachable straight test target: {details}")
 
     def set_motion(self, enabled):
         """Enable or disable the guarded Unitree motion adapter."""
@@ -334,7 +332,7 @@ class ShortGoalTest(Node):
             f"(start=({start_x:.3f}, {start_y:.3f}), "
             f"end=({final_x:.3f}, {final_y:.3f}))"
         )
-        minimum = max(0.10, self.distance - 0.20)
+        minimum = max(0.10, self.distance * 0.60)
         if displacement < minimum:
             raise RuntimeError(
                 f"SLAM displacement {displacement:.3f} m is below "

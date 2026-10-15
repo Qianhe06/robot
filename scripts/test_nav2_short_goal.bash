@@ -6,8 +6,8 @@ project_root="$(
 )"
 
 if [[ "${1:-}" != "--clear-path-confirmed" ]]; then
-  echo "该测试会让机器人通过 Nav2 向前导航 0.50 米。" >&2
-  echo "请使用平整防滑地面，清空前方 90 度扇区至少 2 米。" >&2
+  echo "该测试会让机器人通过 Nav2 向正前方导航 0.25 米。" >&2
+  echo "请使用平整防滑地面，清空正前方至少 0.8 米。" >&2
   echo "请握住遥控器并准备物理急停。" >&2
   echo "准备完成后使用参数 --clear-path-confirmed 重新运行。" >&2
   exit 2
@@ -19,6 +19,8 @@ unset COLCON_PREFIX_PATH
 unset PYTHONPATH
 source "${project_root}/activate_go2.bash"
 
+original_goal_tolerance=""
+
 cleanup() {
   trap - EXIT
   set +e
@@ -26,6 +28,11 @@ cleanup() {
     std_srvs/srv/Trigger '{}' >/dev/null 2>&1
   timeout 5 ros2 service call /go2_motion/enable \
     std_srvs/srv/SetBool '{data: false}' >/dev/null 2>&1
+  if [[ -n "$original_goal_tolerance" ]]; then
+    timeout 5 ros2 param set /controller_server \
+      goal_checker.xy_goal_tolerance "$original_goal_tolerance" \
+      >/dev/null 2>&1
+  fi
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM
@@ -37,9 +44,17 @@ timeout 8 ros2 service call /scissors_search/enable \
 echo "===== 重新执行运动前检查 ====="
 bash "${project_root}/scripts/check_motion_preflight.bash"
 
-echo "===== Nav2 前方 0.50 米目标测试 ====="
+echo "===== 临时收紧到点容差 ====="
+original_goal_tolerance="$(
+  ros2 param get /controller_server goal_checker.xy_goal_tolerance \
+    | awk '{print $NF}'
+)"
+echo "原始到点容差：${original_goal_tolerance} 米"
+ros2 param set /controller_server goal_checker.xy_goal_tolerance 0.04
+
+echo "===== Nav2 正前方 0.25 米目标测试 ====="
 /usr/bin/python3 "${project_root}/scripts/nav2_short_goal_test.py" \
-  --distance 0.50 \
+  --distance 0.25 \
   --timeout 25
 
 echo "Nav2 短距离测试完成；运动保持禁用。"
